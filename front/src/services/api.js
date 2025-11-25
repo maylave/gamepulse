@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 
 // === Конфигурация ===
 const API_CONFIG = {
-  primary:  'https://localhost:7066/api',
+  primary:  '/api',
   //backup: '/api',
   timeout: 5000
 }
