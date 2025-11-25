@@ -1,0 +1,27 @@
+﻿<!-- Views/Home/Index.cshtml -->
+@{
+    ViewData["Title"] = "Game Store API";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f0f0f0; }
+        h1 { color: #333; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Game Store API</h1>
+    <p>Доступные эндпоинты:</p>
+    <ul style="list-style: none; padding: 0;">
+        <li><a href="/api/Users">Пользователи</a></li>
+        <li><a href="/Home/Error404">Страница 404</a></li>
+    </ul>
+</body>
+</html>

@@ -1,0 +1,129 @@
+@use '@/assets/style/global/_variables' as *;
+.btn {
+  padding: 0.75rem 1.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: $border-radius-md;
+  cursor: pointer;
+  transition: opacity $transition-normal;
+
+  &:hover {
+    opacity: 0.95;
+  }
+
+  &-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: $color-text;
+    border: 1px solid $color-text-secondary;
+  }
+}
+
+
+.form-control {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #333;
+  border-radius: $border-radius-md;
+  color: white;
+  font-size: 1rem;
+  font-family: $font-main;
+}
+
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #2a2a32;
+  }
+
+  th {
+    color: $color-text-secondary;
+    font-weight: 600;
+  }
+}
+
+.order-status {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  &.status-completed {
+    background: rgba(0, 217, 141, 0.15);
+    color: $color-success;
+  }
+
+  &.status-pending {
+    background: rgba(255, 255, 255, 0.05);
+    color: $color-text-secondary;
+  }
+}
+
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: $color-text-secondary;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(106, 0, 255, 0.3);
+    border-top: 3px solid $color-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: $color-text-secondary;
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: $color-primary;
+  }
+}
+
+
+.support-list {
+  margin: 1.2rem 0 1.5rem;
+  padding-left: 1.5rem;
+
+  li {
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+
+    i {
+      width: 24px;
+      height: 24px;
+      background: rgba(0, 240, 255, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-primary;
+    }
+  }
+}

@@ -1,0 +1,49 @@
+@use '@/assets/style/global/_variables' as *;
+
+
+
+.footer {
+
+  &-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  &-col {
+    h3 {
+      color: $footer-title;
+      margin-bottom: 1.2rem;
+      font-size: 1.3rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    ul li {
+      margin-bottom: 0.7rem;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    a:hover {
+      color: $footer-link-hover; 
+    }
+  }
+}
+footer{
+    background: $footer-bg;
+  padding: 3rem 0 2rem;
+  color: $footer-text;
+  font-size: 0.95rem;
+ //border-top: $color-card solid 1px;
+
+}

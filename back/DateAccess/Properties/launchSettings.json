@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "DateAccess": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Профиль 1": {
+      "commandName": "Project",
+      "workingDirectory": "WebApplication1"
+    }
+  }
+}

@@ -1,0 +1,223 @@
+@use '@/assets/style/global/_variables' as *;
+.game-card {
+    background: $color-card;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+
+   width: 250px;
+    display: flex;
+    flex-direction: column;
+    height: 450px; 
+}
+
+.game-img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    display: block;
+}
+
+.tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: $color-success;
+    color: #000;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    z-index: 2;
+}
+
+.game-card.promo::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    padding: 2px;
+    background: linear-gradient(45deg, $color-primary, $color-secondary, $color-primary);
+    background-size: 300% 300%;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    z-index: 1;
+    animation: rotateGradient 3s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes rotateGradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 300% 50%;
+    }
+}
+
+.game-info {
+    padding: 1.3rem;
+   
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1; // Занимает всё доступное пространство
+}
+
+.game-info h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.6rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.price-old {
+    text-decoration: line-through;
+    color: #777;
+    font-size: 0.95rem;
+}
+
+.price {
+    color: $color-primary;
+    font-weight: bold;
+    font-size: 1.35rem;
+    margin: 0.5rem 0;
+}
+
+.add-to-cart {
+    width: 100%;
+    padding: 0.65rem;
+    background: #2a2a32;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+
+    z-index: 10;
+    min-height: 44px;
+}
+.game-card-link {
+  text-decoration: none;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.game-card {
+
+
+
+
+ 
+  &.placeholder {
+    
+    border: 2px dashed $color-primary; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    cursor: pointer;
+
+ 
+
+    .placeholder-button {
+      width: 100%;
+      padding: 12px;
+      text-align: center;
+
+      button {
+        background: transparent;
+        border: none;
+        color: $color-primary;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+
+        
+      }
+    }
+  }
+
+
+  &.add-new {
+    
+    border: 2px solid #000; // черная рамка
+    
+
+    .add-new-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .add-icon {
+      font-size: 32px;
+      font-weight: bold;
+      color: #000;
+    }
+
+ 
+
+    .add-new-button {
+      width: 100%;
+      padding: 12px;
+      text-align: center;
+
+      button {
+        background: transparent;
+        border: none;
+        color: #000;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: underline;
+
+        &:hover {
+          color: #333;
+        }
+      }
+    }
+  }
+}
+
+.wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  i {
+    font-size: 18px;
+  }
+}

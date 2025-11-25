@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "Добавить пользователя";
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.Error
+    </div>
+}
+<h2>Добавить нового пользователя</h2>
+
+<form asp-action="Create" method="post">
+     @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group mb-3">
+        <label for="name">Имя</label>
+        <input type="text" name="name" class="form-control" required />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="email">Email</label>
+        <input type="email" name="email" class="form-control" required />
+        <span asp-validation-for="email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="password">Пароль</label>
+        <input type="password" name="password" class="form-control" required minlength="6" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="age">Возраст</label>
+        <input type="number" name="age" class="form-control" min="1" max="120" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Добавить</button>
+    <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+</form>

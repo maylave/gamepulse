@@ -1,0 +1,15 @@
+@use '@/assets/style/global/_variables' as *;
+
+
+.category-card {
+  background: $color-card;
+  border-radius: 12px;
+  padding: 1.4rem 0.8rem;
+  text-align: center;
+}
+
+.category-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.8rem;
+  color: $color-primary;
+}

@@ -1,0 +1,25 @@
+@use '@/assets/style/global/_variables' as *;
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+
+  input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 0.95rem;
+  }
+
+  i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $color-text-secondary;
+  }
+}

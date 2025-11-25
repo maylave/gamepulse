@@ -1,0 +1,19 @@
+@use '@/assets/style/global/_variables' as *;
+.social-icons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #222;
+    color: white;
+   ;
+    
+  }
+}

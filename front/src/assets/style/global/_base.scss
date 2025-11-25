@@ -1,0 +1,45 @@
+// src/styles/_base.scss
+
+@use 'variables' as *;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $font-main;
+  background-color: $color-bg;
+  color: $color-text;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.container {
+  width: 90%;
+  
+  margin: 0 40px;
+}
+
+.section-title {
+  font-size: 2rem;
+  margin: 2.5rem 0 1.8rem;
+  position: relative;
+  display: inline-block;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 50px;
+    height: 4px;
+    background: $color-primary;
+    border-radius: 2px;
+  }
+}

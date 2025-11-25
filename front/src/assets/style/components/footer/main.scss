@@ -1,0 +1,8 @@
+// Импорт всех частей футера
+@use 'baseStyle';
+@use 'socialIcons';
+@use 'footerBottom';
+
+// Опционально: если будут адаптивные версии
+// @import 'desktopFooter';
+// @use 'mobileFooter';

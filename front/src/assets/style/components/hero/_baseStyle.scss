@@ -1,0 +1,61 @@
+.hero {
+  background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.95));
+  background-size: cover;
+  background-position: center;
+  height: 550px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 1.5rem;
+  margin-bottom: 3.5rem;
+  color: white;
+}
+
+
+
+
+
+@media (min-width: 1200px) {
+  .hero h1 {
+    font-size: 3.6rem;
+  }
+}
+
+
+
+
+
+
+@media (max-width: 768px) {
+  .hero {
+    height: 450px;
+    padding: 0 1rem;
+  }
+
+  .hero h1 {
+    font-size: 2.2rem;
+    max-width: 100%;
+  }
+
+  .hero p {
+    font-size: 1.1rem;
+    max-width: 100%;
+  }
+
+  .countdown {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+  }
+
+  .countdown-item {
+    min-width: 60px;
+    padding: 0.6rem;
+  }
+
+  .countdown-value {
+    font-size: 1.5rem;
+  }
+}

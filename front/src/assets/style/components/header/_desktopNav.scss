@@ -1,0 +1,42 @@
+@use '@/assets/style/global/_variables' as *;
+
+.desktop-nav {
+  display: flex;
+  gap: 1.5rem;
+
+  a {
+    position: relative;
+    color: $color-text;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.4rem 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: $color-primary;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    &.router-link-active,
+    &:hover {
+      color: $color-primary;
+
+      &::after {
+        opacity: 1;
+        animation: pulseScale 1.8s infinite ease-in-out;
+      }
+    }
+  }
+}
+
+@keyframes pulseScale {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.5; }
+  100% { opacity: 1; }
+}

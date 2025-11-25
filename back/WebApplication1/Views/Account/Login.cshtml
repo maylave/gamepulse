@@ -1,0 +1,42 @@
+﻿@model WebApplication1.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Вход";
+}
+<link rel="stylesheet" href="~/css/base.css" />
+<div class="login-container">
+    <div class="sign">Войти</div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="Login" method="post">
+        @Html.AntiForgeryToken() 
+        <div class="form-group">
+            <label asp-for="Email">Электронная почта</label>
+            <input asp-for="Email" class="input-data" placeholder="" autocomplete="email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Password">Пароль</label>
+            <input asp-for="Password" type="password" class="input-data" placeholder="" autocomplete="current-password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="custom-checkbox">
+            <input type="checkbox" id="remember" asp-for="RememberMe"/>
+            <span class="checkmark"></span>
+            <span class="textBox">Запомнить меня</span>
+        </div>
+
+        <button type="submit" class="submit-data">Войти</button>
+
+        <div class="link">Если нет аккаунта? <a asp-action="Account/Register">Создать</a></div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
