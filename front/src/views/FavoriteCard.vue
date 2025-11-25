@@ -84,7 +84,7 @@
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
+import Footer from '@/components/footer.vue'
 
 const cartStore = useCartStore()
 const router = useRouter()

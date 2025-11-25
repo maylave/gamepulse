@@ -29,7 +29,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
+import Footer from '@/components/footer.vue'
 import ProfileSidebar from '../components/profile/ProfileSidebar.vue'
 import ProfileForm from '../components/profile/ProfileForm.vue'
 import OrdersList from '../components/profile/OrdersList.vue'

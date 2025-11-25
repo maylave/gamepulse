@@ -102,8 +102,8 @@ import { useCartStore } from '@/stores/cart'
 import { api } from '@/services/api'
 
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
-import GameCard from '@/components/Game-card.vue'
+import Footer from '@/components/footer.vue'
+import GameCard from '@/components/game-card.vue'
 
 
 

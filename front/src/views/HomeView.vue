@@ -40,8 +40,8 @@ import { useCartStore } from '@/stores/cart'
 import { api } from '@/services/api'
 
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
-import Hero from '@/components/Hero.vue'
+import Footer from '@/components/footer.vue'
+import Hero from '@/components/hero.vue'
 import GenreCategories from '@/components/GenreCategories.vue'
 import GamesCarousel from '@/components/GamesCarousel.vue'
 

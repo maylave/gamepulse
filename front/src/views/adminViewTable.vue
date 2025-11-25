@@ -41,7 +41,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import AdminTable from '@/components/admin/AdminTable.vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
+import Footer from '@/components/footer.vue'
 
 const store = useAdminStore()
 const activeEntity = ref('users')

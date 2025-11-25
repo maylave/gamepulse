@@ -79,7 +79,7 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
+import Footer from '@/components/footer.vue'
 
 const newMessage = ref('')
 const messages = ref([
