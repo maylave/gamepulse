@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: ./back
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+    # Убираем ports — доступ только через proxy
+
+  frontend:
+    build: ./front
+    ports:
+      - "8081:80" 
+    depends_on:
+      - webapp
+
+  nginx-proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - webapp
+      - frontend

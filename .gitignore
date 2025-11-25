@@ -78,31 +78,7 @@ logs
 Logs
 *.log
 
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
 
-# Build artifacts
-build/
-dist/
-out/
-*.exe
-*.dll
-*.pdb
-*.exe.config
-*.dll.config
-
-# OS generated files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Vue CLI (если использовался)
-front/vue.config.js
-
-# Vite runner (если используется)
-vue-runner.exe
 
 # Игнорируем сам .gitignore (если он уже в репозитории, это не нужно)
 #.gitignore
