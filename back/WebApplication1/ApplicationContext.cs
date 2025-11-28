@@ -103,7 +103,9 @@ namespace WebApplication1
                 entity.HasKey(o => o.Id);
                 entity.Property(o => o.TotalAmount).HasColumnType("decimal(18,2)").IsRequired();
                 entity.Property(o => o.Status).HasMaxLength(50);
-                entity.Property(o => o.OrderDate).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(o => o.OrderDate)
+      .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
 
                 entity.HasOne(o => o.User)
                       .WithMany(u => u.Orders)

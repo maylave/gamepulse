@@ -1,4 +1,4 @@
-# Stage 1: Build Vue
+
 FROM node:22-alpine AS builder
 
 WORKDIR /app
@@ -10,10 +10,10 @@ RUN npm run build
 
 FROM nginx:alpine
 
-# Удаляем стандартный конфиг
+
 RUN rm -rf /etc/nginx/conf.d/default.conf
 
-# Копируем наш конфиг
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 

@@ -10,17 +10,15 @@ using WebApplication1.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// === Конфигурация JWT ===
+
 var jwtConfig = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtConfig["Key"] ;
 var jwtIssuer = jwtConfig["Issuer"] ;
 var jwtAudience = jwtConfig["Audience"] ;
 
-// === DbContext ===
 builder.Services.AddDbContext<ApplicationContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// === Identity ===
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
     options.Password.RequireDigit = false;
@@ -74,7 +72,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-// === Middleware ===
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -84,7 +82,7 @@ else
 {
     app.UseHsts();
 }
-// === Единственный обработчик ошибок (не дублируй!) ===
+
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
@@ -94,8 +92,7 @@ app.UseExceptionHandler(errorApp =>
         var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
         var exception = exceptionHandlerPathFeature?.Error;
 
-        Console.WriteLine($"❌ CRASH: {exception?.Message}");
-        Console.WriteLine($"📝 StackTrace: {exception?.StackTrace}");
+     
 
         await context.Response.WriteAsync("{ \"error\": \"Внутренняя ошибка сервера\" }");
     });
@@ -111,12 +108,19 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// === Инициализация ролей ===
+// Создаём область видимости DI
+using var scope = app.Services.CreateScope();
+var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+
+// Применяем миграции — создаются все таблицы (включая AspNetRoles)
+await context.Database.MigrateAsync();
+
+// Теперь можно безопасно работать с ролями
+
 await SeedRolesAsync(app);
 
 app.Run();
 
-// --- Вспомогательные методы ---
 static async Task SeedRolesAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();

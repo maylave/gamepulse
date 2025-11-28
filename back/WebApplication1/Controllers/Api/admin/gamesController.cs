@@ -102,7 +102,9 @@ namespace WebApplication1.Controllers.Api.Admin
                 Tag = dto.Tag,
                 ImageUrl = dto.ImageUrl,
                 Category = dto.Category,
-                ReleaseDate = releaseDate,
+                ReleaseDate = releaseDate.Kind == DateTimeKind.Utc
+    ? releaseDate
+    : releaseDate.ToUniversalTime(),
                 AgeRating = dto.AgeRating,
                 IsPreorder = dto.IsPreorder,
                 Developer = dto.Developer,

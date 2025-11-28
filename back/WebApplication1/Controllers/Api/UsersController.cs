@@ -25,6 +25,7 @@ namespace WebApplication1.Controllers.Api
 
         // === РЕГИСТРАЦИЯ ===
         [HttpPost]
+        
         public async Task<IActionResult> Post([FromBody] CreateUserDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Email) ||

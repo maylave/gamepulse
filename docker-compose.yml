@@ -1,16 +1,33 @@
-version: '3.8'
-
 services:
+  postgres:
+    image: postgres:18
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: root1
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: GameStoreDb
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root1 -d GameStoreDb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   webapp:
     build: ./back
     environment:
       - ASPNETCORE_URLS=http://+:5000
-    # Убираем ports — доступ только через proxy
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=GameStoreDb;Username=root1;Password=root
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   frontend:
     build: ./front
-    ports:
-      - "8081:80" 
+   
     depends_on:
       - webapp
 
@@ -23,3 +40,6 @@ services:
     depends_on:
       - webapp
       - frontend
+
+volumes:
+  postgres_data:
