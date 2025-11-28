@@ -24,9 +24,7 @@
           >
             Регистрация
           </div>
-          <div v-else class="confirm-form">
-            Подтверждение
-          </div>
+        
         </div>
 
         <!-- Форма входа -->
@@ -98,13 +96,21 @@
                 class="form-control" 
                 minlength="6" 
                 required
+                @input="checkPasswordStrength"
               >
               <button type="button" class="toggle-password" @click="toggleRegisterPassword" aria-label="Показать пароль">
                 <i v-if="showRegisterPassword" class="fas fa-eye-slash"></i>
                 <i v-else class="fas fa-eye"></i>
               </button>
-
-              <div class="line"></div>
+            </div>
+            
+         
+            <div v-if="registerForm.password" class="password-strength">
+              <div 
+                class="strength-bar" 
+                :class="passwordStrengthClass"
+                :style="{ width: passwordStrengthWidth }"
+              ></div>
             </div>
             <div v-if="errors.regPassword" class="error">{{ errors.regPassword }}</div>
           </div>
@@ -141,8 +147,9 @@
           <button type="submit" class="btn">Зарегистрироваться</button>
         </form>
 
-      
-        <form v-if="isConfirming" @submit.prevent="confirmEmail" class="auth-form-confirm">
+   
+        <form v-if="isConfirming" @submit.prevent="confirmEmail" class="auth-form">
+            <h2 class="confirm-h">Подтверждение</h2>
           <p class="confirm-instruction">
             Мы отправили код подтверждения на <strong>{{ registerForm.email }}</strong>
           </p>
@@ -179,7 +186,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -223,6 +230,39 @@ const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
 const showConfirmPassword = ref(false)
 
+
+const passwordStrength = ref(0)
+const passwordStrengthMessages = {
+  0: 'Слишком слабый',
+  1: 'Слабый',
+  2: 'Средний',
+  3: 'Сильный'
+}
+
+const checkPasswordStrength = () => {
+  const password = registerForm.password
+  let strength = 0
+
+  if (password.length >= 6) strength++
+  if (/[a-z]/.test(password)) strength++
+  if (/[A-Z]/.test(password)) strength++
+  if (/[0-9]/.test(password)) strength++
+  if (/[^A-Za-z0-9]/.test(password)) strength++
+
+  passwordStrength.value = Math.min(strength, 4)
+}
+
+const passwordStrengthWidth = computed(() => {
+  const widths = ['25%', '50%', '75%', '100%']
+  return widths[Math.min(passwordStrength.value - 1, 3)] || '0%'
+})
+
+const passwordStrengthClass = computed(() => {
+  const classes = ['weak', 'medium', 'strong', 'very-strong']
+  return classes[Math.min(passwordStrength.value - 1, 3)] || 'very-weak'
+})
+
+// === Toggle пароля ===
 const toggleLoginPassword = () => {
   showLoginPassword.value = !showLoginPassword.value
 }
@@ -235,6 +275,7 @@ const toggleConfirmPassword = () => {
   showConfirmPassword.value = !showConfirmPassword.value
 }
 
+// === Валидация ===
 const validateEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
@@ -295,6 +336,11 @@ const validateRegister = () => {
     return false
   }
   
+  if (passwordStrength.value < 2) {
+    errors.regPassword = 'Пароль слишком слабый'
+    return false
+  }
+  
   if (!registerForm.confirmPassword) {
     errors.regConfirmPassword = 'Подтверждение пароля обязательно'
     return false
@@ -320,6 +366,7 @@ const extractErrorMessage = (message) => {
   return message
 }
 
+// === Методы ===
 const login = async () => {
   const isValid = validateLogin()
   if (!isValid) return
@@ -347,15 +394,12 @@ const register = async () => {
   if (!isValid) return
 
   try {
-    // Регистрация без входа
     await authStore.register({
       name: registerForm.name,
       email: registerForm.email,
       password: registerForm.password,
       age: 18
     })
-
-    // Переход к подтверждению
     isConfirming.value = true
     serverError.register = ''
   } catch (error) {
@@ -390,7 +434,6 @@ const confirmEmail = async () => {
       code: confirmCode.value
     })
 
-    // Вход после подтверждения
     await authStore.login({
       email: registerForm.email,
       password: registerForm.password
@@ -415,223 +458,12 @@ const cancelConfirmation = () => {
 }
 </script>
 
-<style scoped>
-main {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
+<style lang="scss" scoped src="@/assets/style/views/auth/index.scss"></style>
 
-.auth-container {
-  width: 100%;
-  max-width: 420px;
-  background: var(--color-card);
-  border-radius: 20px;
-  padding: 2.5rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  position: relative;
-  overflow: hidden;
-}
 
-.auth-container::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, var(--color-secondary), var(--color-primary), transparent);
-  animation: rotate 6s linear infinite;
-  z-index: 0;
-  opacity: 0.15;
-}
+<style scoped>.auth-container{
 
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
-.auth-content {
-  position: relative;
-  z-index: 1;
-}
 
-.logo {
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2.2rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
 
-.logo i {
-  color: var(--color-primary);
-}
-
-.tabs {
-  display: flex;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  margin-bottom: 2rem;
-  overflow: hidden;
-}
-
-.tab {
-  flex: 1;
-  text-align: center;
-  padding: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.tab.active {
-  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
-  color: #000;
-}
-
-.form-group {
-  margin-bottom: 1.4rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.form-control {
-  width: 100%;
-  padding: 0.85rem 1.2rem;
-  padding-right: 3rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid #333;
-  border-radius: 12px;
-  color: white;
-  font-size: 1rem;
-  font-family: 'Inter', sans-serif;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
-}
-
-.password-wrapper {
-  position: relative;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #aaa;
-  font-size: 1.1rem;
-}
-
-.toggle-password:hover {
-  color: var(--color-primary);
-}
-
-.btn {
-  width: 100%;
-  padding: 0.9rem;
-  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
-  color: #000;
-  font-weight: 600;
-  font-size: 1.05rem;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: opacity 0.3s;
-}
-
-.btn:hover {
-  opacity: 0.95;
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  margin-top: 0.8rem;
-}
-
-.btn-secondary:hover {
-  opacity: 0.9;
-}
-
-.footer-link {
-  text-align: center;
-  margin-top: 1.5rem;
-  color: var(--color-text-secondary);
-  font-size: 0.95rem;
-}
-
-.error {
-  color: #ff6b6b;
-  font-size: 0.85rem;
-  margin-top: 0.4rem;
-}
-
-.server-error {
-  margin-top: 0.8rem;
-  padding: 0.5rem;
-  background: rgba(255, 107, 107, 0.15);
-  border-radius: 8px;
-  text-align: center;
-}
-
-.consent {
-  margin-top: 0.5rem;
-}
-
-.consent-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-}
-
-.consent-label input {
-  margin-top: 0.25rem;
-  transform: scale(1.2);
-  cursor: pointer;
-}
-
-.consent-label a {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-.consent-label a:hover {
-  opacity: 0.8;
-}
-
-.confirm-instruction {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: var(--color-text-secondary);
-}
-.confirm-form{
-  align-items: center;
-  background-color: none;
-}
-</style>
+} </style>

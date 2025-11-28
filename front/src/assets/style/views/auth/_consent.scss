@@ -1,0 +1,45 @@
+@use '@/assets/style/global/_variables' as *;
+
+
+
+.consent {
+  margin-top: 0.5rem;
+}
+
+.consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  
+  input {
+    margin-top: 0.25rem;
+    transform: scale(1.2);
+    cursor: pointer;
+  }
+  
+  a {
+    color: $color-primary;
+    text-decoration: underline;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+.confirm-h{
+  display: flex;
+  justify-content: center;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  background-color: rgba(100, 205, 100,0.1);
+  border: $color-primary solid 1px;
+  border-radius: 15px;
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  -ms-border-radius: 15px;
+  -o-border-radius: 15px;
+  margin-bottom: 10px;
+}

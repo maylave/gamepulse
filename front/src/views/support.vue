@@ -52,7 +52,7 @@
             <h3>Другие способы связи</h3>
             <p>
               <i class="fas fa-envelope"></i>
-              <a href="mailto:support@pirogiryzani.ru">support@pirogiryzani.ru</a>
+              <a href="mailto:support@gamepulse.ru">support@gamepulse.ru</a>
             </p>
             <p>
               <i class="fas fa-phone"></i>
@@ -60,7 +60,7 @@
             </p>
             <p>
               <i class="fab fa-telegram"></i>
-              <a href="https://t.me/pirogiryzani_help" target="_blank">@pirogiryzani_help</a>
+              <a href="https://t.me/gamepulse_help" target="_blank">@gamepulse_help</a>
             </p>
           </div>
 
@@ -131,7 +131,8 @@ function scrollToBottom() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/assets/style/global/_variables' as *;
 .support-page {
   min-height: 100vh;
   display: flex;
@@ -240,8 +241,8 @@ function scrollToBottom() {
   width: 44px;
   height: 44px;
   margin-left: 0.8rem;
-  background: #FF6B35;
-  color: white;
+  color: $color-secondary;
+  color: rgb(82, 80, 178);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -252,7 +253,7 @@ function scrollToBottom() {
 }
 
 .send-btn:hover:not(:disabled) {
-  background: #e05a2a;
+  color: $color-primary;
 }
 
 .send-btn:disabled {
@@ -297,13 +298,13 @@ function scrollToBottom() {
 }
 
 .info-card a:hover {
-  color: #FF6B35;
+  color: $color-primary;
 }
 
 .info-card i {
   width: 20px;
   text-align: center;
-  color: #FF6B35;
+  color: $color-primary;
 }
 
 
