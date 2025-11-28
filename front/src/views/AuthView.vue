@@ -2,13 +2,14 @@
   <main>
     <div class="auth-container">
       <div class="auth-content">
-        <!-- Логотип с иконкой gamepad -->
         <div class="logo">
           <i class="fas fa-gamepad"></i> GamePulse
         </div>
 
+        <!-- Вкладки -->
         <div class="tabs">
           <div 
+            v-if="!isConfirming"
             class="tab" 
             :class="{ active: currentForm === 'login' }"
             @click="currentForm = 'login'"
@@ -16,16 +17,20 @@
             Войти
           </div>
           <div 
+            v-if="!isConfirming"
             class="tab" 
             :class="{ active: currentForm === 'register' }"
             @click="currentForm = 'register'"
           >
             Регистрация
           </div>
+          <div v-else class="confirm-form">
+            Подтверждение
+          </div>
         </div>
 
         <!-- Форма входа -->
-        <form v-if="currentForm === 'login'" @submit.prevent="login" class="auth-form">
+        <form v-if="currentForm === 'login' && !isConfirming" @submit.prevent="login" class="auth-form">
           <div class="form-group">
             <label for="loginEmail">Email</label>
             <input 
@@ -60,7 +65,7 @@
         </form>
 
         <!-- Форма регистрации -->
-        <form v-if="currentForm === 'register'" @submit.prevent="register" class="auth-form">
+        <form v-if="currentForm === 'register' && !isConfirming" @submit.prevent="register" class="auth-form">
           <div class="form-group">
             <label for="regName">Имя</label>
             <input 
@@ -98,14 +103,71 @@
                 <i v-if="showRegisterPassword" class="fas fa-eye-slash"></i>
                 <i v-else class="fas fa-eye"></i>
               </button>
+
+              <div class="line"></div>
             </div>
             <div v-if="errors.regPassword" class="error">{{ errors.regPassword }}</div>
+          </div>
+          <div class="form-group">
+            <label for="regConfirmPassword">Подтверждение пароля</label>
+            <div class="password-wrapper">
+              <input 
+                id="regConfirmPassword" 
+                v-model="registerForm.confirmPassword" 
+                :type="showConfirmPassword ? 'text' : 'password'"
+                class="form-control" 
+                minlength="6" 
+                required
+              >
+              <button type="button" class="toggle-password" @click="toggleConfirmPassword" aria-label="Показать пароль">
+                <i v-if="showConfirmPassword" class="fas fa-eye-slash"></i>
+                <i v-else class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div v-if="errors.regConfirmPassword" class="error">{{ errors.regConfirmPassword }}</div>
+          </div>
+          <div class="form-group consent">
+            <label class="consent-label">
+              <input 
+                v-model="registerForm.consent" 
+                type="checkbox" 
+                required
+              >
+              <span>Согласен на <a href="#" @click.prevent>обработку персональных данных</a></span>
+            </label>
+            <div v-if="errors.regConsent" class="error">{{ errors.regConsent }}</div>
           </div>
           <div v-if="serverError.register" class="error server-error">{{ serverError.register }}</div>
           <button type="submit" class="btn">Зарегистрироваться</button>
         </form>
 
-        <div class="footer-link">
+      
+        <form v-if="isConfirming" @submit.prevent="confirmEmail" class="auth-form-confirm">
+          <p class="confirm-instruction">
+            Мы отправили код подтверждения на <strong>{{ registerForm.email }}</strong>
+          </p>
+          <div class="form-group">
+            <label for="confirmCode">Код подтверждения</label>
+            <input 
+              id="confirmCode" 
+              v-model="confirmCode" 
+              type="text" 
+              class="form-control" 
+              placeholder="Введите 6-значный код"
+              maxlength="6"
+              inputmode="numeric"
+              required
+            >
+            <div v-if="errors.confirmCode" class="error">{{ errors.confirmCode }}</div>
+          </div>
+          <div v-if="serverError.confirm" class="error server-error">{{ serverError.confirm }}</div>
+          <button type="submit" class="btn">Подтвердить email</button>
+          <button type="button" class="btn btn-secondary" @click="cancelConfirmation">
+            Назад
+          </button>
+        </form>
+
+        <div v-if="!isConfirming" class="footer-link">
           Нет аккаунта? 
           <span @click="currentForm = 'register'" style="color: var(--color-primary); font-weight: 600; cursor: pointer;">
             Создать
@@ -124,6 +186,8 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 const router = useRouter()
 const currentForm = ref('login')
+const isConfirming = ref(false)
+const confirmCode = ref('')
 
 const loginForm = reactive({
   email: '',
@@ -133,7 +197,9 @@ const loginForm = reactive({
 const registerForm = reactive({
   name: '',
   email: '',
-  password: ''
+  password: '',
+  confirmPassword: '',
+  consent: false
 })
 
 const errors = reactive({
@@ -141,16 +207,21 @@ const errors = reactive({
   loginPassword: '',
   regName: '',
   regEmail: '',
-  regPassword: ''
+  regPassword: '',
+  regConfirmPassword: '',
+  regConsent: '',
+  confirmCode: ''
 })
 
 const serverError = reactive({
   login: '',
-  register: ''
+  register: '',
+  confirm: ''
 })
 
 const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const toggleLoginPassword = () => {
   showLoginPassword.value = !showLoginPassword.value
@@ -158,6 +229,10 @@ const toggleLoginPassword = () => {
 
 const toggleRegisterPassword = () => {
   showRegisterPassword.value = !showRegisterPassword.value
+}
+
+const toggleConfirmPassword = () => {
+  showConfirmPassword.value = !showConfirmPassword.value
 }
 
 const validateEmail = (email) => {
@@ -191,6 +266,8 @@ const validateRegister = () => {
   errors.regName = ''
   errors.regEmail = ''
   errors.regPassword = ''
+  errors.regConfirmPassword = ''
+  errors.regConsent = ''
   serverError.register = ''
   
   if (!registerForm.name) {
@@ -210,6 +287,26 @@ const validateRegister = () => {
   
   if (!registerForm.password) {
     errors.regPassword = 'Пароль обязателен'
+    return false
+  }
+  
+  if (registerForm.password.length < 6) {
+    errors.regPassword = 'Пароль должен содержать минимум 6 символов'
+    return false
+  }
+  
+  if (!registerForm.confirmPassword) {
+    errors.regConfirmPassword = 'Подтверждение пароля обязательно'
+    return false
+  }
+  
+  if (registerForm.password !== registerForm.confirmPassword) {
+    errors.regConfirmPassword = 'Пароли не совпадают'
+    return false
+  }
+  
+  if (!registerForm.consent) {
+    errors.regConsent = 'Необходимо согласие на обработку персональных данных'
     return false
   }
   
@@ -250,6 +347,7 @@ const register = async () => {
   if (!isValid) return
 
   try {
+    // Регистрация без входа
     await authStore.register({
       name: registerForm.name,
       email: registerForm.email,
@@ -257,11 +355,9 @@ const register = async () => {
       age: 18
     })
 
-    await authStore.login({
-      email: registerForm.email,
-      password: registerForm.password
-    })
-    router.push('/')
+    // Переход к подтверждению
+    isConfirming.value = true
+    serverError.register = ''
   } catch (error) {
     let message = 'Ошибка при регистрации'
     if (error.response?.data?.error) {
@@ -272,6 +368,50 @@ const register = async () => {
     serverError.register = message
     console.error('Register error:', error)
   }
+}
+
+const confirmEmail = async () => {
+  errors.confirmCode = ''
+  serverError.confirm = ''
+
+  if (!confirmCode.value) {
+    errors.confirmCode = 'Введите код подтверждения'
+    return
+  }
+
+  if (confirmCode.value.length !== 6 || isNaN(confirmCode.value)) {
+    errors.confirmCode = 'Код должен содержать 6 цифр'
+    return
+  }
+
+  try {
+    await authStore.confirmEmail({
+      email: registerForm.email,
+      code: confirmCode.value
+    })
+
+    // Вход после подтверждения
+    await authStore.login({
+      email: registerForm.email,
+      password: registerForm.password
+    })
+    router.push('/')
+  } catch (error) {
+    let message = 'Неверный код подтверждения'
+    if (error.response?.data?.error) {
+      message = extractErrorMessage(error.response.data.error)
+    } else if (error.response?.data) {
+      message = extractErrorMessage(error.response.data)
+    }
+    serverError.confirm = message
+    console.error('Confirm error:', error)
+  }
+}
+
+const cancelConfirmation = () => {
+  isConfirming.value = false
+  confirmCode.value = ''
+  serverError.confirm = ''
 }
 </script>
 
@@ -368,7 +508,7 @@ main {
 .form-control {
   width: 100%;
   padding: 0.85rem 1.2rem;
-  padding-right: 3rem; 
+  padding-right: 3rem;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid #333;
   border-radius: 12px;
@@ -426,6 +566,16 @@ main {
   opacity: 0.95;
 }
 
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  margin-top: 0.8rem;
+}
+
+.btn-secondary:hover {
+  opacity: 0.9;
+}
+
 .footer-link {
   text-align: center;
   margin-top: 1.5rem;
@@ -445,5 +595,43 @@ main {
   background: rgba(255, 107, 107, 0.15);
   border-radius: 8px;
   text-align: center;
+}
+
+.consent {
+  margin-top: 0.5rem;
+}
+
+.consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.consent-label input {
+  margin-top: 0.25rem;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.consent-label a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.consent-label a:hover {
+  opacity: 0.8;
+}
+
+.confirm-instruction {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-secondary);
+}
+.confirm-form{
+  align-items: center;
+  background-color: none;
 }
 </style>
