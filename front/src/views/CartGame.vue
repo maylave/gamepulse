@@ -1,4 +1,4 @@
-<!-- src/views/CartView.vue -->
+
 <template>
   <div class="cart-page">
     <Header />
@@ -6,7 +6,7 @@
       <div class="cart-header">
         <h1>Ваша корзина</h1>
         <router-link to="/catalog" class="continue-shopping">
-           Продолжить покупки
+          Продолжить покупки
         </router-link>
       </div>
 
@@ -40,7 +40,7 @@
               </button>
             </div>
             <div class="item-total">
-              ₽{{ (item.price * item.quantity).toFixed(0) }}
+              ₽{{ cartStore.sumCart    }}
             </div>
             <button
               class="remove-btn"
@@ -78,23 +78,19 @@
       </div>
     </div>
     <div class="game-grid">
-        <GameCard
-          v-for="(game, index) in games"
-          :key="game.id || `game-${index}`"
-          :game="game"
-          class="game"
-          :isAddNew="false"
-          @add-to-cart="handleAddToCart"
-          @game-click="handleGameClick"
-        />
-
-        
-       
-      </div>
+      <GameCard
+        v-for="(game, index) in games"
+        :key="game.id || `game-${index}`"
+        :game="game"
+        class="game"
+        :isAddNew="false"
+        @add-to-cart="handleAddToCart"
+        @game-click="handleGameClick"
+      />
+    </div>
     <Footer />
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -105,24 +101,31 @@ import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
 import GameCard from '@/components/game-card.vue'
 
-
-
-
-
-
 const cartStore = useCartStore()
 const router = useRouter()
-
-const handleCheckout = () => {
-  if (cartStore.cartItems.length === 0) return
-}
-
 
 const games = ref([])
 const page = ref(1)
 const totalPages = ref(0)
 const isLoading = ref(false)
 const hasMore = ref(true)
+
+// FIX: Вызываем загрузку корзины при монтировании компонента
+onMounted(() => {
+  cartStore.fetchCart()
+  loadGames(false)
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
+const handleCheckout = () => {
+  if (cartStore.cartItems.length === 0) return
+  // Здесь можно добавить логику перехода к оформлению заказа
+  console.log('Переход к оформлению заказа...')
+}
 
 const loadGames = async (append = false) => {
   if (isLoading.value || !hasMore.value) return
@@ -142,7 +145,7 @@ const loadGames = async (append = false) => {
       games.value.push(...newGames)
     } else {
       games.value = newGames
-      page.value = 1 
+      page.value = 1
     }
 
     totalPages.value = response.totalPages || 0
@@ -165,19 +168,10 @@ const handleScroll = () => {
   const scrollBottom = window.innerHeight + window.scrollY
   const bodyHeight = document.body.offsetHeight
 
-  if (scrollBottom >= bodyHeight - 500) {
+  if (scrollBottom >= bodyHeight - 300) { // Уменьшили порог для плавности
     loadGames(true)
   }
 }
-
-onMounted(() => {
-  loadGames(false)
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
 
 const handleAddToCart = (game) => {
   cartStore.addToCart(game)
@@ -191,6 +185,7 @@ const openCreateGameModal = () => {
   console.log('Открыть создание игры')
 }
 </script>
+
 
 <style scoped>
 .cart-page {

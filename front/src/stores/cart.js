@@ -1,6 +1,6 @@
-// src/stores/cartStore.js
 import { defineStore } from 'pinia'
-import { api } from '@/services/api' 
+import { api } from '@/services/api'
+import { startTransition } from 'react';
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
@@ -10,40 +10,82 @@ export const useCartStore = defineStore('cart', {
     initialized: false
   }),
 
-  getters: {
-    cartItems: (state) => state.items,
-    total: (state) =>
-      state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    itemCount: (state) =>
-      state.items.reduce((count, item) => count + item.quantity, 0)
-  },
+getters: {
+  cartItems: (state) => state.items,
+  total: (state) =>
+    state.items.reduce((sum, item) => {
+      
+      const price = Number(item.price) || 0;
+      console.log(price)
+      const quantity = Number(item.quantity) || 1;
+       console.log(quantity)
+       console.log(sum)
+      return sum + (price * quantity);
+    }, 0),
+
+
+
+  sumCart: (state) =>
+state.items.reduce(( item) => {
+      
+      const price = Number(item.price) || 0;
+      console.log(price)
+      const quantity = Number(item.quantity) || 1;
+       console.log(quantity)
+      
+      return  (price * quantity);
+    }, 0),
+
+  itemCount: (state) =>
+    
+    state.items.reduce((count, item) => Number(count) + Number(item.quantity), 0)
+},
+
 
   actions: {
-  
     async fetchCart() {
-      if (this.initialized) return
 
       this.loading = true
       this.error = null
 
       try {
- 
         const response = await api.cart.get()
-       
-        this.items = Array.isArray(response?.items) ? response.items : response || []
+
+     
+        if (Array.isArray(response)) {
+          this.items = response
+        } else if (response?.items && Array.isArray(response.items)) {
+          this.items = response.items
+        } else {
+          this.items = []
+        }
+
         this.initialized = true
       } catch (err) {
-        this.error = err.message || 'Не удалось загрузить корзину'
-        console.error('[Cart] Ошибка загрузки:', err)
-        this.items = []
+        if (err.response?.status === 404) {
+         
+          this.items = []
+          this.initialized = true
+          console.log('[Cart] Корзина не найдена, инициализирована пустая')
+        } else {
+          this.error = err.message || 'Не удалось загрузить корзину'
+          console.error('[Cart] Ошибка загрузки:', err)
+          this.items = []
+        }
       } finally {
         this.loading = false
       }
     },
 
-  
     async addToCart(game) {
-     
+      if (!game.id) {
+        console.error('Товар не имеет ID!', game)
+        return
+      }
+       if (typeof game.price !== 'number' || isNaN(game.price)) {
+    console.error('Некорректная цена товара:', game.price);
+    return;
+  }
       const existing = this.items.find(item => item.id === game.id)
       if (existing) {
         existing.quantity += 1
@@ -51,11 +93,9 @@ export const useCartStore = defineStore('cart', {
         this.items.push({ ...game, quantity: 1 })
       }
 
-    
       try {
         await api.cart.add(game.id)
       } catch (err) {
-     
         if (existing) {
           existing.quantity -= 1
         } else {
@@ -66,7 +106,6 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
-    // Обновление количества
     async updateQuantity({ id, quantity }) {
       if (quantity <= 0) {
         await this.removeFromCart(id)
@@ -74,35 +113,44 @@ export const useCartStore = defineStore('cart', {
       }
 
       const item = this.items.find(i => i.id === id)
-      if (!item) return
+      if (!item) {
+        console.warn(`Товар с ID ${id} не найден в корзине`)
+        return
+      }
 
       const oldQty = item.quantity
       item.quantity = quantity
 
       try {
-      
-        await api.cart.update?.(id, { quantity }) // опционально, если метод есть
-      
+        await api.cart.update(id, quantity)
       } catch (err) {
         item.quantity = oldQty
         this.error = err.message
+        console.error('[Cart] Ошибка обновления количества:', err)
       }
     },
 
-    
     async removeFromCart(id) {
-      const original = [...this.items]
-      this.items = this.items.filter(i => i.id !== id)
+      const itemIndex = this.items.findIndex(i => i.id === id)
+      if (itemIndex === -1) {
+        console.warn(`Товар с ID ${id} уже удалён`)
+        return
+      }
+
+      // Сохраняем только удаляемый товар
+      const removedItem = this.items[itemIndex]
+      this.items.splice(itemIndex, 1)
 
       try {
         await api.cart.remove(id)
       } catch (err) {
-        this.items = original
+        // Возвращаем товар на прежнее место
+        this.items.splice(itemIndex, 0, removedItem)
         this.error = err.message
+        console.error('[Cart] Ошибка удаления:', err)
       }
     },
 
-    // Очистка
     async clearCart() {
       const original = [...this.items]
       this.items = []
