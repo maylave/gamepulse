@@ -100,7 +100,7 @@ function formatTime() {
 function sendMessage() {
   if (!newMessage.value.trim()) return
 
-  // Сообщение от пользователя
+ 
   messages.value.push({
     sender: 'user',
     text: newMessage.value,
@@ -109,7 +109,7 @@ function sendMessage() {
 
   newMessage.value = ''
 
-  // Имитация ответа поддержки (в реальном проекте — запрос к API)
+
   setTimeout(() => {
     messages.value.push({
       sender: 'support',

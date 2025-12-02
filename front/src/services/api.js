@@ -9,35 +9,7 @@ const API_CONFIG = {
   timeout: 5000
 }
 
-// === Демо-данные (только для GET) ===
-const DEMO_GAMES = [
-  {
-    id: 1,
-    title: 'Cyberpunk 2077',
-    price: 1299,
-    oldPrice: 3249,
-    tag: '-60%',
-    image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&q=80',
-    description: 'Open-world RPG от создателей The Witcher 3.',
-    genre: 'RPG, Экшен',
-    developer: 'CD Projekt RED',
-    ageRating: 18,
-    isPreorder: false,
-    releaseDate: '2020-12-10'
-  },
-  {
-    id: 2,
-    title: 'Elden Ring',
-    price: 2499,
-    image: 'https://images.unsplash.com/photo-1511512578717-92578b575e9d?w=800&q=80',
-    description: 'Эпическая фэнтези-RPG от FromSoftware.',
-    genre: 'RPG, Экшен',
-    developer: 'FromSoftware',
-    ageRating: 16,
-    isPreorder: false,
-    releaseDate: '2022-02-25'
-  }
-]
+
 
 const DEMO_CART = [{ id: 1, gameId: 1, quantity: 1 }]
 const DEMO_WISHLIST = [{ id: 1, gameId: 2 }]
@@ -63,7 +35,7 @@ const request = async (endpoint, options = {}) => {
  const userId = userStr ? JSON.parse(userStr).id : null
   const urls = [
     `${API_CONFIG.primary}${endpoint}`//,
-   // `${API_CONFIG.backup}${endpoint}`
+
   ]
 
   const baseHeaders = { 'Content-Type': 'application/json' }
@@ -142,16 +114,27 @@ export const api = {
     search: (q) => request(`/games/search?q=${encodeURIComponent(q)}`)
   },
 
-  cart: {
-    get: () => request('/cart'),
-  
-    add: (gameId) => request('/cart', {
-      method: 'POST',
-      body: JSON.stringify({ gameId })
-    }),
-    remove: (itemId) => request(`/cart/${itemId}`, { method: 'PUT' }),
-    clear: () => request('/cart', { method: 'DELETE' })
-  },
+cart: {
+  get: () => request('/cart'),
+
+  add: (gameId) => request('/cart', {
+    method: 'POST',
+    body: JSON.stringify({ gameId, quantity: 1 }) // явно укажите quantity
+  }),
+
+update: (id, quantity) => request(`/cart/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ quantity}) // ✅ Правильно: { "quantity": 5 }
+  }),
+
+  remove: (id) => request(`/cart/${id}`, {
+    method: 'DELETE'
+  }),
+
+  clear: () => request('/cart', {
+    method: 'DELETE'
+  })
+},
 
   wishlist: {
     get: () => request('/wishlist'),

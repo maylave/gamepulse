@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <!-- Форма добавления отзыва -->
+ 
     <div v-if="isAuthenticated" class="review-form">
       <h3>Оставить отзыв</h3>
       <form @submit.prevent="submitReview">
@@ -42,7 +42,7 @@
           </div>
         </div>
 
-        <!-- Текст отзыва -->
+        
         <div class="text-input">
           <label for="review-text">Ваш отзыв:</label>
           <textarea
@@ -128,6 +128,8 @@ const submitReview = async () => {
     isSubmitting.value = false
   }
 }
+
+
 </script>
 
 <style scoped lang="scss">

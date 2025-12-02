@@ -35,7 +35,7 @@ export const useCartStore = defineStore('cart', {
       } catch (err) {
         this.error = err.message || 'Не удалось загрузить корзину'
         console.error('[Cart] Ошибка загрузки:', err)
-        this.items = [] // или оставить как есть — по вашему выбору
+        this.items = []
       } finally {
         this.loading = false
       }

@@ -1,0 +1,26 @@
+{
+  "url": "http://localhost/api/cart/1",
+  "method": "put",
+  "params": {},
+  "paramsArray": [],
+  "headers": {
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInT5cCI6IkpXVCJ9.eyJuYW1laWQiOiIyIiwiZW1haWwiOiJhZG1pbkBHYW1lUHVsc2UuY29tIiwidW5pcXVlX25hbWUiOiLQkNGA0YLQtdC8Iiwicm9sZSI6WyJVc2VyIiwiQWRtaW4iXSwibmJmIjoxNzY0NjU1OTYzLCJleHAiOjE3NjUyNjA3NjMsImlhdCI6MTc2NDY1NTk2MywiaXNzIjoiR2FtZVN0b3JlSXNzdWVyIiwiYXVkIjoiR2FtZVN0b3JlQXVkaWVuY2UifQ.zwbYHVXfLBPPk_3SVft4tcer9CBIuy6JeGEVcL4PIKU",
+    "Content-Type": "application/json"
+  },
+  "headersArray": [
+    [
+      "9219d5ed-6715-43ab-9364-a39fdd428cbb",
+      "Authorization",
+      "Bearer eyJhbGciOiJIUzI1NiIsInT5cCI6IkpXVCJ9.eyJuYW1laWQiOiIyIiwiZW1haWwiOiJhZG1pbkBHYW1lUHVsc2UuY29tIiwidW5pcXVlX25hbWUiOiLQkNGA0YLQtdC8Iiwicm9sZSI6WyJVc2VyIiwiQWRtaW4iXSwibmJmIjoxNzY0NjU1OTYzLCJleHAiOjE3NjUyNjA3NjMsImlhdCI6MTc2NDY1NTk2MywiaXNzIjoiR2FtZVN0b3JlSXNzdWVyIiwiYXVkIjoiR2FtZVN0b3JlQXVkaWVuY2UifQ.zwbYHVXfLBPPk_3SVft4tcer9CBIuy6JeGEVcL4PIKU",
+      true,
+      "STRING"
+    ],
+    [
+      "14c7064f-624b-4508-89bf-e8da4d6f5a78",
+      "Content-Type",
+      "application/json",
+      true,
+      "STRING"
+    ]
+  ]
+}

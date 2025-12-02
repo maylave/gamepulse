@@ -47,7 +47,11 @@
 
     &.hidden {
       transform: translateY(100%);
-    }
+      -webkit-transform: translateY(100%);
+      -moz-transform: translateY(100%);
+      -ms-transform: translateY(100%);
+      -o-transform: translateY(100%);
+}
 
     .nav-item {
       display: flex;
@@ -106,7 +110,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-  /* Активное состояние — при нажатии */
+
   &:active {
     transform: scale(0.95);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);

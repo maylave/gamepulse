@@ -19,49 +19,7 @@ namespace WebApplication1.Controllers.Api
             _context = context;
             _userManager = userManager;
         }
-        [HttpGet]
-        public async Task<ActionResult<PagedResult<GameDto>>> GetGames(
-    string? category = null,
-    int page = 1,
-    int limit = 24)
-        {
-            if (page < 1) page = 1;
-            if (limit < 1) limit = 24;
-            if (limit > 100) limit = 100;
 
-            var query = _context.Games.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(category) &&
-                !string.Equals(category, "all", StringComparison.OrdinalIgnoreCase))
-            {
-                query = query.Where(g => g.Category == category);
-            }
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .Skip((page - 1) * limit)
-                .Take(limit)
-                .Select(g => new GameDto
-                {
-                    Id = g.Id,
-                    Title = g.Title,
-                    Price = g.Price,
-                    ImageUrl = g.ImageUrl,
-                    Category = g.Category
-                })
-                .ToListAsync();
-
-            var result = new PagedResult<GameDto>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = limit
-            };
-
-            return Ok(result);
-        }
         // GET: api/cart
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CartItemDto>>> GetCart()
@@ -94,6 +52,9 @@ namespace WebApplication1.Controllers.Api
         [HttpPost]
         public async Task<ActionResult<CartItemDto>> AddToCart([FromBody] AddToCartDto dto)
         {
+            if (dto == null || dto.GameId <= 0)
+                return BadRequest("Требуется корректный GameId");
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return Unauthorized();
@@ -124,7 +85,6 @@ namespace WebApplication1.Controllers.Api
 
             await _context.SaveChangesAsync();
 
-
             return new CartItemDto
             {
                 Id = cartItem.Id,
@@ -140,9 +100,12 @@ namespace WebApplication1.Controllers.Api
             };
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<CartItemDto>> UpdateCartItem(int id, [FromBody] int quantity)
+       [HttpPut("{id}")]
+public async Task<ActionResult<CartItemDto>> UpdateCartItem(int id, [FromBody] UpdateCartItemDto dto)
         {
+            if (dto == null || dto.Quantity <= 0)
+                return BadRequest("Количество должно быть больше 0");
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return Unauthorized();
@@ -150,14 +113,14 @@ namespace WebApplication1.Controllers.Api
             var cartItem = await _context.CartItems
                 .Include(c => c.Game)
                 .FirstOrDefaultAsync(c => c.Id == id && c.UserId == user.Id);
+ if (cartItem == null)
+    {
+        // Логируем, что не нашли
+        Console.WriteLine($"Элемент корзины {id} для пользователя {user.Id} НЕ найден");
+        return NotFound("Элемент корзины не найден");
+    }   
 
-            if (cartItem == null)
-                return NotFound();
-
-            if (quantity <= 0)
-                return BadRequest("Количество должно быть больше 0");
-
-            cartItem.Quantity = quantity;
+            cartItem.Quantity = dto.Quantity;
             await _context.SaveChangesAsync();
 
             return new CartItemDto
@@ -174,6 +137,28 @@ namespace WebApplication1.Controllers.Api
                 }
             };
         }
+
+        // DELETE: api/cart/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> RemoveFromCart(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized();
+
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(c => c.Id == id && c.UserId == user.Id);
+
+            if (cartItem == null)
+                return NotFound("Элемент корзины не найден");
+
+            _context.CartItems.Remove(cartItem);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/cart
         [HttpDelete]
         public async Task<IActionResult> ClearCart()
         {
@@ -191,6 +176,7 @@ namespace WebApplication1.Controllers.Api
             return NoContent();
         }
 
+        // --- DTOs ---
         public class AddToCartDto
         {
             public int GameId { get; set; }
@@ -204,23 +190,16 @@ namespace WebApplication1.Controllers.Api
             public int Quantity { get; set; }
             public GameDto Game { get; set; } = null!;
         }
-
+public class UpdateCartItemDto
+{
+    public int Quantity { get; set; }
+}
         public class GameDto
         {
             public int Id { get; set; }
             public string Title { get; set; } = string.Empty;
             public decimal Price { get; set; }
             public string? ImageUrl { get; set; }
-
-            public string? Category { get; set; }
-        }
-        public class PagedResult<T>
-        {
-            public IEnumerable<T> Items { get; set; } = Enumerable.Empty<T>();
-            public int TotalCount { get; set; }
-            public int Page { get; set; }
-            public int PageSize { get; set; }
-            public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
         }
     }
 }

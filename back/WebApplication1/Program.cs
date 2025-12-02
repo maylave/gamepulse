@@ -113,7 +113,7 @@ using var scope = app.Services.CreateScope();
 var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
 
 // Применяем миграции — создаются все таблицы (включая AspNetRoles)
-await context.Database.MigrateAsync();
+//await context.Database.MigrateAsync();
 
 // Теперь можно безопасно работать с ролями
 
