@@ -13,10 +13,15 @@ namespace WebApplication1.Models
 
         public string AvatarUrl { get; set; } 
 
+
+        public string? EmailConfirmationCode { get; set; } // Новое поле
+        public bool EmailConfirmed { get; set; } = false;   // Переопределяем базовое
+
        
         public ICollection<СartItem> CartItems { get; } = new List<СartItem>();
         public ICollection<WishlistItem> WishlistItems { get; } = new List<WishlistItem>();
         public ICollection<Review> Reviews { get; } = new List<Review>();
         public ICollection<Order> Orders { get; } = new List<Order>();
+        public ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
     }
 }

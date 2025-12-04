@@ -20,6 +20,12 @@
               <div class="message-text">{{ msg.text }}</div>
               <div class="message-time">{{ msg.time }}</div>
             </div>
+            <div v-if="loading" class="message loading">
+              Загрузка истории чата...
+            </div>
+            <div v-if="error" class="message error">
+              {{ error }}
+            </div>
           </div>
 
           <div class="chat-input">
@@ -29,8 +35,13 @@
               type="text"
               placeholder="Напишите сообщение..."
               class="input-field"
+              :disabled="sending"
             />
-            <button @click="sendMessage" class="send-btn" :disabled="!newMessage.trim()">
+            <button
+              @click="sendMessage"
+              class="send-btn"
+              :disabled="!newMessage.trim() || sending"
+            >
               <i class="fas fa-paper-plane"></i>
             </button>
           </div>
@@ -77,51 +88,67 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/footer.vue'
+import Footer from '@/components/footer.vue' // Убедитесь, что имя файла footer.vue — lowercase!
+import { api } from '@/services/api'
 
 const newMessage = ref('')
-const messages = ref([
-  {
-    sender: 'support',
-    text: 'Здравствуйте! Чем могу помочь?',
-    time: 'Только что'
-  }
-])
-
+const messages = ref([])
 const chatMessages = ref(null)
+const loading = ref(false)
+const sending = ref(false)
+const error = ref(null)
 
-function formatTime() {
-  const now = new Date()
-  return now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0')
+onMounted(async () => {
+  await loadChat()
+})
+
+async function loadChat() {
+  loading.value = true
+  error.value = null
+  try {
+    const chat = await api.support.getOrCreateChat()
+    messages.value = chat.messages || []
+    nextTick(() => scrollToBottom())
+  } catch (err) {
+    console.error('Ошибка загрузки чата:', err)
+    error.value = 'Не удалось загрузить чат. Попробуйте позже.'
+  } finally {
+    loading.value = false
+  }
 }
 
-function sendMessage() {
-  if (!newMessage.value.trim()) return
+function formatTime(date) {
+  return date.getHours() + ':' + String(date.getMinutes()).padStart(2, '0')
+}
 
- 
+async function sendMessage() {
+  const text = newMessage.value.trim()
+  if (!text) return
+
+  // Добавляем локально для мгновенного отклика
+  const now = new Date()
   messages.value.push({
     sender: 'user',
-    text: newMessage.value,
-    time: formatTime()
+    text,
+    time: formatTime(now)
   })
-
   newMessage.value = ''
+  nextTick(() => scrollToBottom())
 
-
-  setTimeout(() => {
-    messages.value.push({
-      sender: 'support',
-      text: 'Спасибо за обращение! Оператор ответит вам в ближайшее время.',
-      time: formatTime()
-    })
-    scrollToBottom()
-  }, 1000)
-
-  nextTick(() => {
-    scrollToBottom()
-  })
+  sending.value = true
+  try {
+    await api.support.sendMessage(text)
+    // После отправки — можно обновить чат, чтобы увидеть возможный ответ
+    // await loadChat() // опционально: раскомментируйте, если хотите обновлять сразу
+  } catch (err) {
+    console.error('Ошибка отправки:', err)
+    error.value = 'Не удалось отправить сообщение. Попробуйте ещё раз.'
+    // Можно удалить последнее сообщение или оставить — как UX-решение
+  } finally {
+    sending.value = false
+  }
 }
 
 function scrollToBottom() {
@@ -133,6 +160,7 @@ function scrollToBottom() {
 
 <style scoped lang="scss">
 @use '@/assets/style/global/_variables' as *;
+
 .support-page {
   min-height: 100vh;
   display: flex;
@@ -140,9 +168,6 @@ function scrollToBottom() {
 }
 
 .container {
-  width: 90%;
-  max-width: 1400px;
-  margin: 0 auto;
   padding: 2rem 0;
 }
 
@@ -194,6 +219,7 @@ function scrollToBottom() {
   border-radius: 12px;
   position: relative;
   line-height: 1.4;
+  word-break: break-word;
 }
 
 .message.support {
@@ -204,9 +230,18 @@ function scrollToBottom() {
 
 .message.user {
   align-self: flex-end;
-  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
-  color: #000;
+  background: #0276b07a; // ваш цвет
+  color: #fff;
   border-top-right-radius: 4px;
+}
+
+.message.loading,
+.message.error {
+  align-self: center;
+  background: none;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  max-width: 100%;
 }
 
 .message-time {
@@ -237,11 +272,15 @@ function scrollToBottom() {
   border-color: var(--color-primary);
 }
 
+.input-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .send-btn {
   width: 44px;
   height: 44px;
   margin-left: 0.8rem;
-  color: $color-secondary;
   color: rgb(82, 80, 178);
   border: none;
   border-radius: 12px;
@@ -249,7 +288,8 @@ function scrollToBottom() {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: color 0.2s;
+  background: transparent;
 }
 
 .send-btn:hover:not(:disabled) {
@@ -306,7 +346,6 @@ function scrollToBottom() {
   text-align: center;
   color: $color-primary;
 }
-
 
 @media (max-width: 900px) {
   .support-layout {

@@ -15,6 +15,10 @@ namespace WebApplication1
         public DbSet<Genre> Genres { get; set; }
         public DbSet<GameGenre> GameGenres { get; set; }
 
+      
+    public DbSet<ChatSession> ChatSessions { get; set; }
+    public DbSet<ChatMessage> ChatMessages { get; set; }
+
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
@@ -135,6 +139,31 @@ namespace WebApplication1
                       .HasForeignKey(gg => gg.GenreId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+              modelBuilder.Entity<ChatSession>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.ClientName).IsRequired().HasMaxLength(200);
+            entity.Property(s => s.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(s => s.LastActivity).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasOne(s => s.Client)
+                  .WithMany(u => u.ChatSessions)
+                  .HasForeignKey(s => s.ClientId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+         modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Content).IsRequired().HasMaxLength(4000);
+            entity.Property(m => m.SentAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.HasOne(m => m.ChatSession)
+                  .WithMany(cs => cs.Messages)
+                  .HasForeignKey(m => m.ChatSessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(m => m.SupportUser)
+                  .WithMany()
+                  .HasForeignKey(m => m.SupportUserId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
         }
     }
 }

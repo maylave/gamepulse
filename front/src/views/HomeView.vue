@@ -84,11 +84,7 @@ const handleAddToCart = (game) => {
 </script>
 
 <style scoped>
-.container {
 
-
-  padding: 0 1.5rem 2rem;
-}
 
 .section-title {
   text-align: left;

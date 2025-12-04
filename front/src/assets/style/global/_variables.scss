@@ -23,7 +23,8 @@ $spacing-sm: 0.6rem;
 $spacing-md: 1rem;
 $spacing-lg: 1.5rem;
 $spacing-xl: 2rem;
-
+$space-xxl: 2.5rem;   // 40px
+$space-3xl: 3rem;     // 48px
 // Радиусы
 $border-radius-sm: 6px;
 $border-radius-md: 12px;
@@ -34,8 +35,8 @@ $transition-fast: 0.2s ease;
 $transition-normal: 0.3s ease;
 $transition-slow: 0.4s ease;
 
-
 :root {
+  /* Цвета */
   --color-primary: #{$color-primary};
   --color-secondary: #{$color-secondary};
   --color-bg: #{$color-bg};
@@ -48,6 +49,31 @@ $transition-slow: 0.4s ease;
   --color-accent-dark: #{$color-accent-dark};
   --color-delete: #{$color-delete};
   --color-delete-hover: #{$color-delete-hover};
+  --color-border: #{$color-border};
+  --color-bg-hover: #{$color-bg-hover};
+  --footer-bg: #{$footer-bg};
+  --footer-text: #{$footer-text};
+  --footer-title: #{$footer-title};
+  --footer-link-hover: #{$footer-link-hover};
+
+  /* Шрифты */
   --font-main: #{$font-main};
 
+  /* Отступы */
+  --space-sm: #{$spacing-sm};
+  --space-md: #{$spacing-md};
+  --space-lg: #{$spacing-lg};
+  --space-xl: #{$spacing-xl};
+  --space-xxl: #{$space-xxl};
+  --space-3xl: #{$space-3xl};
+
+  /* Радиусы */
+  --border-radius-sm: #{$border-radius-sm};
+  --border-radius-md: #{$border-radius-md};
+  --border-radius-lg: #{$border-radius-lg};
+
+  /* Анимации */
+  --transition-fast: #{$transition-fast};
+  --transition-normal: #{$transition-normal};
+  --transition-slow: #{$transition-slow};
 }

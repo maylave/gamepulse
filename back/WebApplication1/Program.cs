@@ -51,15 +51,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// === CORS для Vue.js ===
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVue", policy =>
     {
         policy.WithOrigins("http://localhost:8081")
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
+             // .AllowCredentials();
     });
 });
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -108,15 +108,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Создаём область видимости DI
-using var scope = app.Services.CreateScope();
-var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
 
-// Применяем миграции — создаются все таблицы (включая AspNetRoles)
-//await context.Database.MigrateAsync();
-
-// Теперь можно безопасно работать с ролями
-
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+    await context.Database.MigrateAsync(); 
+}
 await SeedRolesAsync(app);
 
 app.Run();
@@ -125,7 +122,7 @@ static async Task SeedRolesAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    var roles = new[] { "User", "Admin" };
+    var roles = new[] { "User", "Admin", "Support" }; 
 
     foreach (var roleName in roles)
     {

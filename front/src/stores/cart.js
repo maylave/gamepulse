@@ -4,6 +4,7 @@ import { api } from '@/services/api'
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
+    lastOrderEmail: '',
     items: [],
     loading: false,
     error: null,
@@ -12,7 +13,7 @@ export const useCartStore = defineStore('cart', {
   }),
 
 getters: {
-  
+            
   cartItems: (state) =>
   state.items
     .filter(item => item != null && item.game != null)

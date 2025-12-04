@@ -101,7 +101,7 @@ onUnmounted(() => {
 
 const handleCheckout = () => {
   if (cartStore.cartItems.length) {
-    console.log('Оформление заказа')
+    router.push('/checkout')
   }
 }
 

@@ -5,21 +5,8 @@
     <main class="container">
       <h1 class="page-title">Избранное</h1>
 
-      <div v-if="isLoading" class="loading-indicator">
-        <div class="spinner"></div>
-      </div>
-
       
-      <div v-else class="game-grid">
-        <GameCard
-          v-for="item in wishlist"
-          :key="item.id"
-          :game="item.game"
-          @add-to-cart="handleAddToCart"
-          @game-click="handleGameClick"
-          @remove-from-wishlist="() => removeFromWishlist(item.id)"
-        />
-      </div>
+     
     </main>
 
     <Footer />
@@ -27,56 +14,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+
 import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
-import GameCard from '@/components/game-card.vue'
-import { api } from '@/services/api'
-import { useCartStore } from '@/stores/cart'
 
-const cartStore = useCartStore()
-
-const wishlist = ref([])
-const isLoading = ref(false)
-
-const loadWishlist = async () => {
-  isLoading.value = true
-  try {
-    const response = await api.wishlist.get()
-    // Ожидаем формат: { items: [ { id, game } ] } или массив напрямую
-    wishlist.value = Array.isArray(response)
-      ? response
-      : (response?.items || [])
-  } catch (error) {
-    console.error('Ошибка загрузки избранного:', error)
-    wishlist.value = []
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const removeFromWishlist = async (wishlistId) => {
-  try {
-    await api.wishlist.remove(wishlistId)
-    // Удаляем из UI без перезагрузки
-    wishlist.value = wishlist.value.filter(item => item.id !== wishlistId)
-  } catch (error) {
-    console.error('Ошибка удаления из избранного:', error)
-  }
-}
-
-const handleAddToCart = (game) => {
-  cartStore.addToCart(game)
-}
-
-const handleGameClick = (game) => {
-  // router.push(`/game/${game.id}`)
-  console.log('Просмотр игры:', game.id)
-}
-
-onMounted(() => {
-  loadWishlist()
-})
 </script>
 
 <style scoped>

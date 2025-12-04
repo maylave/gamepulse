@@ -164,6 +164,33 @@ update: (id, quantity) => request(`/cart/${id}`, {
   }
 },
 
+  support: {
+   
+    getOrCreateChat: () => request('/client/support/chat', { method: 'GET' }),
+
+  
+    sendMessage: (content) =>
+      request('/client/support/chat/message', {
+        method: 'POST',
+        body: JSON.stringify({ content })
+      })
+  },
+
+ 
+  supportAdmin: {
+    
+    getChats: () => request('/support/chats', { method: 'GET' }),
+
+   
+    getMessages: (chatId) => request(`/support/chats/${chatId}/messages`, { method: 'GET' }),
+
+    
+    sendReply: (chatId, content) =>
+      request(`/support/chats/${chatId}/reply`, {
+        method: 'POST',
+        body: JSON.stringify({ content })
+      })
+  },
   admin: {
   games: {
     getAll: () => request('/admin/games'),

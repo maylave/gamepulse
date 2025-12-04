@@ -26,7 +26,7 @@
     &.router-link-active,
     &:hover {
       color: $color-primary;
-
+       animation: pulseScale 1.8s infinite ease-in-out;
       &::after {
         opacity: 1;
         animation: pulseScale 1.8s infinite ease-in-out;

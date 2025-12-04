@@ -2,10 +2,10 @@
   <div class="app">
     <Header />
 
-    <main class="container">
+    <main class="container  containerCatalog">
       <h1 class="page-title">Каталог игр</h1>
 
-      <!-- Панель управления: поиск + сортировка -->
+    
       <div class="controls">
         <div class="search-box">
           <i class="fas fa-search"></i>
@@ -99,10 +99,10 @@ const displayedGames = computed(() => {
 
 <style scoped lang="scss">
 
-.container {
-  width: 90%;
+.containerCatalog {
 
-  margin: 0 60px;
+  justify-content: center;
+ 
   padding: 2rem 0;
 }
 .page-title {
@@ -171,6 +171,9 @@ const displayedGames = computed(() => {
   margin-bottom: 3rem;
 }
 @media (max-width: 768px) {
+  .containerCatalog{
+     margin: 0 90px;
+  }
   .controls {
     flex-direction: column;
     align-items: center;

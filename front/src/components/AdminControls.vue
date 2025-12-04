@@ -7,6 +7,9 @@
          <router-link to="table">
          таблица
          </router-link>
+          <router-link to="supportAdmin">
+         поддержка
+         </router-link>
           <router-link to="404">
         модерация
          </router-link>

@@ -10,6 +10,10 @@ import checkout from '@/views/checkout.vue'
 import profileView from '@/views/ProfileView.vue'
 import FavoriteCard from '@/views/FavoriteCard.vue'
 import WishlistPage from '@/views/WishlistPage.vue'
+import ActivationPage from '@/views/ActivationPage.vue'
+
+
+
 export default [
   { 
     path: '/', 
@@ -82,6 +86,12 @@ export default [
     path: '/checkout',
     name: 'checkout',
     component: checkout,
+    meta: { requiresLoading: true, loadingMessage: 'Загрузка новинок...' }
+  },
+   {
+    path: '/activation',
+    name: 'activation',
+    component: ActivationPage,
     meta: { requiresLoading: true, loadingMessage: 'Загрузка новинок...' }
   }
 ]

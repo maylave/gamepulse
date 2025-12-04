@@ -1,6 +1,6 @@
 
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue' // 👈 добавь computed
+import { ref, computed } from 'vue' 
 import { api } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -46,14 +46,14 @@ export const useAuthStore = defineStore('auth', () => {
         id: data.id,
         name: data.name,
         email: data.email,
-        roles: data.roles // ← обязательно включить
+        roles: data.roles 
       }
 
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('user', JSON.stringify(userData))
 
       isAuthenticated.value = true
-      user.value = userData // ← передавай полный объект
+      user.value = userData 
 
       return data
     } catch (err) {
