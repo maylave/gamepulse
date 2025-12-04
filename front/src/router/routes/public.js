@@ -6,9 +6,10 @@ import CartGame from '@/views/CartGame.vue'
 import support from '@/views/support.vue'
 import sales from '@/views/sales.vue'
 import New from '@/views/new.vue'
+import checkout from '@/views/checkout.vue'
 import profileView from '@/views/ProfileView.vue'
-import FavoriteCard from '../../views/FavoriteCard.vue'
-import WishlistPage from '../../views/WishlistPage.vue'
+import FavoriteCard from '@/views/FavoriteCard.vue'
+import WishlistPage from '@/views/WishlistPage.vue'
 export default [
   { 
     path: '/', 
@@ -75,6 +76,12 @@ export default [
     path: '/new',
     name: 'new',
     component: New,
+    meta: { requiresLoading: true, loadingMessage: 'Загрузка новинок...' }
+  },
+   {
+    path: '/checkout',
+    name: 'checkout',
+    component: checkout,
     meta: { requiresLoading: true, loadingMessage: 'Загрузка новинок...' }
   }
 ]

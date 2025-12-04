@@ -17,7 +17,7 @@
     </div>
 
  
-    <button v-if="!isPlaceholder && !isAddNew" class="wishlist-btn" @click.stop="toggleWishlist" :disabled="wishlistLoading">
+    <button v-if="!isPlaceholder && !isAddNew" class="wishlist-btn" @click.stop="toggleWishlist"  @click="addToWishlist" :disabled="wishlistLoading"  :class="{ 'pulse-added': isAdded }">
       <i :class="isInWishlist ? 'fas fa-heart' : 'far fa-heart'"></i>
     </button>
 
@@ -64,15 +64,25 @@ const props = defineProps({
     type: Object,
     required: true,
     validator(value) {
-      // Для плейсхолдера или "Новой игры" можно передавать минимальный объект
+
       return value.title || value.isPlaceholder || value.isAddNew
     }
   },
   isPromo: { type: Boolean, default: false },
-  isPlaceholder: { type: Boolean, default: false }, // Новое свойство
-  isAddNew: { type: Boolean, default: false } // Ещё одно новое свойство
+  isPlaceholder: { type: Boolean, default: false }, 
+  isAddNew: { type: Boolean, default: false } 
 })
+const isAdded = ref(false);
 
+const addToWishlist = () => {
+ 
+  isAdded.value = true;
+  
+
+  setTimeout(() => {
+    isAdded.value = false;
+  }, 1000);
+};
 const cartStore = useCartStore()
 const wishlistStore = useWishlistStore()
 const wishlistLoading = ref(false)

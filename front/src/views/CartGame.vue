@@ -1,8 +1,7 @@
-
 <template>
   <div class="cart-page">
     <Header />
-    <div class="container">
+    <div class="containerGame">
       <div class="cart-header">
         <h1>Ваша корзина</h1>
         <router-link to="/catalog" class="continue-shopping">
@@ -20,33 +19,16 @@
               <h3>{{ item.title }}</h3>
               <p class="item-genre">{{ item.genre?.join(', ') }}</p>
             </div>
-            <div class="item-price">
-              ₽{{ item.price }}
-            </div>
+            <div class="item-price">{{ item.price }}₽</div>
             <div class="item-quantity">
-              <button
-                class="quantity-btn"
-                @click="cartStore.updateQuantity({ id: item.id, quantity: item.quantity - 1 })"
-                :disabled="item.quantity <= 1"
-              >
-                –
-              </button>
-              <span class="quantity-value">{{ item.quantity }}</span>
-              <button
-                class="quantity-btn"
-                @click="cartStore.updateQuantity({ id: item.id, quantity: item.quantity + 1 })"
-              >
-                +
-              </button>
+              <DragCounter
+                :model-value="item.quantity"
+                :min="1"
+                @update:model-value="qty => cartStore.updateQuantity({ id: item.id, quantity: qty })"
+              />
             </div>
-            <div class="item-total">
-              ₽{{ cartStore.sumCart    }}
-            </div>
-            <button
-              class="remove-btn"
-              @click="cartStore.removeFromCart(item.id)"
-              title="Удалить"
-            >
+            <div class="item-total">{{ item.quantity * item.price }}₽</div>
+            <button class="remove-btn" @click="cartStore.removeFromCart(item.id)" title="Удалить">
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -59,24 +41,19 @@
           </div>
           <div class="summary-row total">
             <span>Итого:</span>
-            <strong>₽{{ cartStore.total }}</strong>
+            <strong>{{ cartStore.total }}₽</strong>
           </div>
-          <button class="checkout-btn" @click="handleCheckout">
-            Оформить заказ
-          </button>
+          <button class="checkout-btn" @click="handleCheckout">Оформить заказ</button>
         </div>
       </div>
 
       <div v-else class="cart-empty">
-        <div class="empty-icon">
-          <i class="fas fa-shopping-cart"></i>
-        </div>
+        <div class="empty-icon"><i class="fas fa-shopping-cart"></i></div>
         <p>Ваша корзина пуста</p>
-        <router-link to="/catalog" class="btn-primary empty-btn">
-          Перейти в каталог
-        </router-link>
+        <router-link to="/catalog" class="btn-primary empty-btn">Перейти в каталог</router-link>
       </div>
     </div>
+
     <div class="game-grid">
       <GameCard
         v-for="(game, index) in games"
@@ -88,9 +65,11 @@
         @game-click="handleGameClick"
       />
     </div>
+
     <Footer />
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -100,17 +79,16 @@ import { api } from '@/services/api'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
 import GameCard from '@/components/game-card.vue'
+import DragCounter from '@/components/DragCounter.vue'
 
 const cartStore = useCartStore()
 const router = useRouter()
 
 const games = ref([])
 const page = ref(1)
-const totalPages = ref(0)
-const isLoading = ref(false)
 const hasMore = ref(true)
+const isLoading = ref(false)
 
-// FIX: Вызываем загрузку корзины при монтировании компонента
 onMounted(() => {
   cartStore.fetchCart()
   loadGames(false)
@@ -122,9 +100,9 @@ onUnmounted(() => {
 })
 
 const handleCheckout = () => {
-  if (cartStore.cartItems.length === 0) return
-  // Здесь можно добавить логику перехода к оформлению заказа
-  console.log('Переход к оформлению заказа...')
+  if (cartStore.cartItems.length) {
+    console.log('Оформление заказа')
+  }
 }
 
 const loadGames = async (append = false) => {
@@ -132,34 +110,25 @@ const loadGames = async (append = false) => {
 
   isLoading.value = true
 
-  try {
-    const response = await api.games.getAll({
-      category: 'free',
-      page: page.value,
-      limit: 24
-    })
+  const response = await api.games.getAll({
+   
+    page: page.value,
+    limit: 24
+  })
 
-    const newGames = Array.isArray(response.items) ? response.items : []
+  const newGames = response.items || []
 
-    if (append) {
-      games.value.push(...newGames)
-    } else {
-      games.value = newGames
-      page.value = 1
-    }
-
-    totalPages.value = response.totalPages || 0
-    hasMore.value = page.value < totalPages.value
-
-    if (hasMore.value) {
-      page.value += 1
-    }
-  } catch (error) {
-    console.error('Ошибка загрузки бесплатных игр:', error)
-    hasMore.value = false
-  } finally {
-    isLoading.value = false
+  if (append) {
+    games.value.push(...newGames)
+  } else {
+    games.value = newGames
+    page.value = 1
   }
+
+  hasMore.value = page.value < (response.totalPages || 1)
+  if (hasMore.value) page.value++
+
+  isLoading.value = false
 }
 
 const handleScroll = () => {
@@ -168,24 +137,14 @@ const handleScroll = () => {
   const scrollBottom = window.innerHeight + window.scrollY
   const bodyHeight = document.body.offsetHeight
 
-  if (scrollBottom >= bodyHeight - 300) { // Уменьшили порог для плавности
+  if (scrollBottom >= bodyHeight - 300) {
     loadGames(true)
   }
 }
 
-const handleAddToCart = (game) => {
-  cartStore.addToCart(game)
-}
-
-const handleGameClick = (game) => {
-  console.log('Клик по игре:', game)
-}
-
-const openCreateGameModal = () => {
-  console.log('Открыть создание игры')
-}
+const handleAddToCart = (game) => cartStore.addToCart(game)
+const handleGameClick = (game) => console.log('Игра:', game)
 </script>
-
 
 <style scoped>
 .cart-page {
@@ -194,11 +153,9 @@ const openCreateGameModal = () => {
   color: var(--color-text);
 }
 
-.container {
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 0;
+.containerGame {
+  
+  padding: 2rem 2.5rem;
 }
 
 .cart-header {
@@ -206,6 +163,7 @@ const openCreateGameModal = () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2.5rem;
+ 
 }
 
 .cart-header h1 {
@@ -273,42 +231,8 @@ const openCreateGameModal = () => {
   text-align: center;
 }
 
-.item-quantity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
-.quantity-btn {
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-text);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
 
-.quantity-btn:hover:not(:disabled) {
-  background: var(--color-primary);
-  color: #000;
-}
-
-.quantity-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.quantity-value {
-  min-width: 30px;
-  text-align: center;
-  font-weight: 600;
-}
 
 .remove-btn {
   width: 32px;
@@ -428,7 +352,7 @@ const openCreateGameModal = () => {
   }
 
   .item-price,
-  .item-quantity,
+  
   .item-total,
   .remove-btn {
     display: flex;
@@ -448,16 +372,6 @@ const openCreateGameModal = () => {
     text-align: center;
   }
 
-  .quantity-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
-  }
-
-  .quantity-value {
-    min-width: 24px;
-    font-size: 0.9rem;
-  }
 }
 .promo-page {
   background-color: var(--bg-primary, #0f0f13);

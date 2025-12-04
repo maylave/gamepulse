@@ -30,6 +30,7 @@
           <span v-if="cartStore.itemCount > 0" class="cart-count">{{ cartStore.itemCount }}</span>
         </div>
 
+          <WishlistButton />
         <div
           v-if="authStore.isAuthenticated"
           ref="desktopMenuRef"
@@ -117,14 +118,14 @@ import { useCartStore } from '@/stores/cart'
 import AdminControls from './AdminControls.vue'
 import logoGamePlus from '@/assets/logoGamePlus.svg'
 import dropdowProfile from './dropdowProfile.vue'
-
+import WishlistButton from './WishlistButton.vue';
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
 
 const searchQuery = ref('')
-const menuVisible = ref(false) // ← единственный источник истины
+const menuVisible = ref(false)
 const shouldJump = ref(false)
 const isMobile = ref(window.innerWidth <= 768)
 
@@ -217,3 +218,7 @@ watch(
 </script>
 
 <style lang="scss" scoped src="@/assets/style/components/header/main.scss"></style>
+
+
+
+<style ></style>

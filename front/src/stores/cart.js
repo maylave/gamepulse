@@ -1,27 +1,43 @@
 import { defineStore } from 'pinia'
 import { api } from '@/services/api'
-import { startTransition } from 'react';
+
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
     items: [],
     loading: false,
     error: null,
-    initialized: false
+    initialized: false,
+    sum: 0
   }),
 
 getters: {
-  cartItems: (state) => state.items,
-  total: (state) =>
-    state.items.reduce((sum, item) => {
-      
-      const price = Number(item.price) || 0;
-      console.log(price)
-      const quantity = Number(item.quantity) || 1;
-       console.log(quantity)
-       console.log(sum)
-      return sum + (price * quantity);
-    }, 0),
+  
+  cartItems: (state) =>
+  state.items
+    .filter(item => item != null && item.game != null)
+    .map(item => {
+     
+      let genre = item.game.genre
+      if (!genre) {
+        genre = []
+      } else if (!Array.isArray(genre)) {
+       
+        genre = [String(genre).trim()]
+      }
+
+      return {
+        id: item.id,
+        gameId: item.game.id,
+        title: item.game.title,
+        price: Number(item.game.price) || 0,
+        image: item.game.imageUrl || '',
+        genre, 
+        quantity: Number(item.quantity) || 1
+      }
+    }),
+total: (state) =>
+    state.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
 
 
 
@@ -29,9 +45,9 @@ getters: {
 state.items.reduce(( item) => {
       
       const price = Number(item.price) || 0;
-      console.log(price)
+      
       const quantity = Number(item.quantity) || 1;
-       console.log(quantity)
+    
       
       return  (price * quantity);
     }, 0),
@@ -66,10 +82,10 @@ state.items.reduce(( item) => {
          
           this.items = []
           this.initialized = true
-          console.log('[Cart] Корзина не найдена, инициализирована пустая')
+         
         } else {
           this.error = err.message || 'Не удалось загрузить корзину'
-          console.error('[Cart] Ошибка загрузки:', err)
+          
           this.items = []
         }
       } finally {
@@ -79,11 +95,9 @@ state.items.reduce(( item) => {
 
     async addToCart(game) {
       if (!game.id) {
-        console.error('Товар не имеет ID!', game)
         return
       }
        if (typeof game.price !== 'number' || isNaN(game.price)) {
-    console.error('Некорректная цена товара:', game.price);
     return;
   }
       const existing = this.items.find(item => item.id === game.id)
@@ -92,7 +106,6 @@ state.items.reduce(( item) => {
       } else {
         this.items.push({ ...game, quantity: 1 })
       }
-
       try {
         await api.cart.add(game.id)
       } catch (err) {
@@ -102,7 +115,6 @@ state.items.reduce(( item) => {
           this.items.pop()
         }
         this.error = err.message
-        console.error('[Cart] Ошибка добавления:', err)
       }
     },
 
@@ -114,7 +126,7 @@ state.items.reduce(( item) => {
 
       const item = this.items.find(i => i.id === id)
       if (!item) {
-        console.warn(`Товар с ID ${id} не найден в корзине`)
+       
         return
       }
 
@@ -126,25 +138,25 @@ state.items.reduce(( item) => {
       } catch (err) {
         item.quantity = oldQty
         this.error = err.message
-        console.error('[Cart] Ошибка обновления количества:', err)
+      
       }
     },
 
     async removeFromCart(id) {
       const itemIndex = this.items.findIndex(i => i.id === id)
       if (itemIndex === -1) {
-        console.warn(`Товар с ID ${id} уже удалён`)
+       
         return
       }
 
-      // Сохраняем только удаляемый товар
+
       const removedItem = this.items[itemIndex]
       this.items.splice(itemIndex, 1)
 
       try {
         await api.cart.remove(id)
       } catch (err) {
-        // Возвращаем товар на прежнее место
+       
         this.items.splice(itemIndex, 0, removedItem)
         this.error = err.message
         console.error('[Cart] Ошибка удаления:', err)

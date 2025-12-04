@@ -8,9 +8,12 @@ export const useWishlistStore = defineStore('wishlist', {
     error: null
   }),
 
-  getters: {
-    isGameInWishlist: (state) => (gameId) => state.items.has(gameId)
+ getters: {
+    isGameInWishlist: (state) => (gameId) => state.items.has(gameId),
+
+    itemCount: (state) => state.items.size
   },
+
 
   actions: {
     async toggleWishlist(game) {

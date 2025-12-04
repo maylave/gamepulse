@@ -9,11 +9,7 @@
         <div class="spinner"></div>
       </div>
 
-      <div v-else-if="wishlist.length === 0" class="empty-state">
-        <p>Список избранного пуст.</p>
-        <p>Добавляйте игры с помощью ❤️ на карточках.</p>
-      </div>
-
+      
       <div v-else class="game-grid">
         <GameCard
           v-for="item in wishlist"
