@@ -11,11 +11,11 @@ namespace WebApplication1.Models
        
         public string Name { get; set; } = string.Empty;
 
-        public string AvatarUrl { get; set; } 
+        public string? AvatarUrl { get; set; } 
 
 
         public string? EmailConfirmationCode { get; set; } // Новое поле
-        public bool EmailConfirmed { get; set; } = false;   // Переопределяем базовое
+        public override bool EmailConfirmed { get; set; }
 
        
         public ICollection<СartItem> CartItems { get; } = new List<СartItem>();

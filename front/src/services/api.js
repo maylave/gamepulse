@@ -85,9 +85,19 @@ export const api = {
   auth: {
     register: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
     login: (data) => request('/users/login', { method: 'POST', body: JSON.stringify(data) }),
+    confirmEmail: (data) => request('/users/confirm-email', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+
+resendConfirmation: (data) => request('/users/resend-confirmation', {
+  method: 'POST',
+  body: JSON.stringify(data)
+}),
    logout: () => {
   localStorage.removeItem('authToken')
   localStorage.removeItem('user')
+   
 }
   },
 
@@ -119,12 +129,12 @@ cart: {
 
   add: (gameId) => request('/cart', {
     method: 'POST',
-    body: JSON.stringify({ gameId, quantity: 1 }) // явно укажите quantity
+    body: JSON.stringify({ gameId, quantity: 1 }) 
   }),
 
 update: (id, quantity) => request(`/cart/${id}`, {
     method: 'PUT',
-    body: JSON.stringify({ quantity}) // ✅ Правильно: { "quantity": 5 }
+    body: JSON.stringify({ quantity}) 
   }),
 
   remove: (id) => request(`/cart/${id}`, {

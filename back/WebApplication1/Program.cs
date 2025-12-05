@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using WebApplication1;
 using WebApplication1.Models;
+using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,12 @@ var jwtAudience = jwtConfig["Audience"] ;
 builder.Services.AddDbContext<ApplicationContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+
+
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
     options.Password.RequireDigit = false;

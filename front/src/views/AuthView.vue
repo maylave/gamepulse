@@ -24,7 +24,6 @@
           >
             Регистрация
           </div>
-        
         </div>
 
         <!-- Форма входа -->
@@ -104,7 +103,6 @@
               </button>
             </div>
             
-         
             <div v-if="registerForm.password" class="password-strength">
               <div 
                 class="strength-bar" 
@@ -147,11 +145,12 @@
           <button type="submit" class="btn">Зарегистрироваться</button>
         </form>
 
-   
+        <!-- Форма подтверждения -->
         <form v-if="isConfirming" @submit.prevent="confirmEmail" class="auth-form">
-            <h2 class="confirm-h">Подтверждение</h2>
+          <h2 class="confirm-h">Подтверждение email</h2>
           <p class="confirm-instruction">
-            Мы отправили код подтверждения на <strong>{{ registerForm.email }}</strong>
+            {{ isFromLogin ? 'Ваш email не подтверждён. Введите код из письма:' : 'Мы отправили код подтверждения на' }}
+            <strong>{{ registerForm.email }}</strong>
           </p>
           <div class="form-group">
             <label for="confirmCode">Код подтверждения</label>
@@ -168,6 +167,20 @@
             <div v-if="errors.confirmCode" class="error">{{ errors.confirmCode }}</div>
           </div>
           <div v-if="serverError.confirm" class="error server-error">{{ serverError.confirm }}</div>
+          
+          <!-- Кнопка повторной отправки -->
+          <div class="resend-section">
+            <p>Не получили код?</p>
+            <button 
+              type="button" 
+              class="resend-btn" 
+              @click="resendConfirmationCode"
+              :disabled="resendCooldown > 0"
+            >
+              {{ resendCooldown > 0 ? `Отправить повторно через ${resendCooldown} сек` : 'Отправить код ещё раз' }}
+            </button>
+          </div>
+          
           <button type="submit" class="btn">Подтвердить email</button>
           <button type="button" class="btn btn-secondary" @click="cancelConfirmation">
             Назад
@@ -186,7 +199,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -194,7 +207,16 @@ const authStore = useAuthStore()
 const router = useRouter()
 const currentForm = ref('login')
 const isConfirming = ref(false)
+const isFromLogin = ref(false) // Новый флаг
 const confirmCode = ref('')
+const resendCooldown = ref(0)
+
+onUnmounted(() => {
+  if (window.resendTimer) {
+    clearInterval(window.resendTimer)
+    window.resendTimer = null
+  }
+})
 
 const loginForm = reactive({
   email: '',
@@ -230,7 +252,6 @@ const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
 const showConfirmPassword = ref(false)
 
-
 const passwordStrength = ref(0)
 const passwordStrengthMessages = {
   0: 'Слишком слабый',
@@ -242,13 +263,11 @@ const passwordStrengthMessages = {
 const checkPasswordStrength = () => {
   const password = registerForm.password
   let strength = 0
-
   if (password.length >= 6) strength++
   if (/[a-z]/.test(password)) strength++
   if (/[A-Z]/.test(password)) strength++
   if (/[0-9]/.test(password)) strength++
   if (/[^A-Za-z0-9]/.test(password)) strength++
-
   passwordStrength.value = Math.min(strength, 4)
 }
 
@@ -262,7 +281,6 @@ const passwordStrengthClass = computed(() => {
   return classes[Math.min(passwordStrength.value - 1, 3)] || 'very-weak'
 })
 
-// === Toggle пароля ===
 const toggleLoginPassword = () => {
   showLoginPassword.value = !showLoginPassword.value
 }
@@ -275,7 +293,6 @@ const toggleConfirmPassword = () => {
   showConfirmPassword.value = !showConfirmPassword.value
 }
 
-// === Валидация ===
 const validateEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
@@ -366,7 +383,34 @@ const extractErrorMessage = (message) => {
   return message
 }
 
-// === Методы ===
+const resendConfirmationCode = async () => {
+  if (resendCooldown.value > 0) return
+
+  try {
+    await authStore.resendConfirmation(registerForm.email)
+    serverError.confirm = ''
+    
+    resendCooldown.value = 60
+    window.resendTimer = setInterval(() => {
+      resendCooldown.value--
+      if (resendCooldown.value <= 0) {
+        clearInterval(window.resendTimer)
+        window.resendTimer = null
+      }
+    }, 1000)
+  } catch (error) {
+    let message = 'Не удалось отправить код'
+    if (error.response?.data?.error) {
+      message = extractErrorMessage(error.response.data.error)
+    } else if (error.response?.data) {
+      message = extractErrorMessage(error.response.data)
+    }
+    serverError.confirm = message
+    console.error('Resend error:', error)
+  }
+}
+
+// ОБНОВЛЁННЫЙ МЕТОД LOGIN
 const login = async () => {
   const isValid = validateLogin()
   if (!isValid) return
@@ -384,7 +428,18 @@ const login = async () => {
     } else if (error.response?.data) {
       message = extractErrorMessage(error.response.data)
     }
-    serverError.login = message
+
+    // 🔑 АВТОМАТИЧЕСКОЕ ПЕРЕКЛЮЧЕНИЕ НА ПОДТВЕРЖДЕНИЕ
+    if (message.includes('Email не подтверждён')) {
+      isConfirming.value = true
+      isFromLogin.value = true
+      registerForm.email = loginForm.email // Сохраняем email
+      serverError.login = ''
+      serverError.confirm = ''
+    } else {
+      serverError.login = message
+    }
+    
     console.error('Login error:', error)
   }
 }
@@ -401,7 +456,13 @@ const register = async () => {
       age: 18
     })
     isConfirming.value = true
+    isFromLogin.value = false
     serverError.register = ''
+    resendCooldown.value = 0
+    if (window.resendTimer) {
+      clearInterval(window.resendTimer)
+      window.resendTimer = null
+    }
   } catch (error) {
     let message = 'Ошибка при регистрации'
     if (error.response?.data?.error) {
@@ -414,6 +475,7 @@ const register = async () => {
   }
 }
 
+// ОБНОВЛЁННЫЙ МЕТОД CONFIRM EMAIL
 const confirmEmail = async () => {
   errors.confirmCode = ''
   serverError.confirm = ''
@@ -434,9 +496,11 @@ const confirmEmail = async () => {
       code: confirmCode.value
     })
 
+    // Автоматический вход после подтверждения
     await authStore.login({
       email: registerForm.email,
-      password: registerForm.password
+      // Если пришли из формы входа - пароль уже введён
+      password: isFromLogin.value ? loginForm.password : registerForm.password
     })
     router.push('/')
   } catch (error) {
@@ -453,17 +517,48 @@ const confirmEmail = async () => {
 
 const cancelConfirmation = () => {
   isConfirming.value = false
+  isFromLogin.value = false
   confirmCode.value = ''
   serverError.confirm = ''
+  resendCooldown.value = 0
+  if (window.resendTimer) {
+    clearInterval(window.resendTimer)
+    window.resendTimer = null
+  }
+  registerForm.email = ''
 }
 </script>
 
 <style lang="scss" scoped src="@/assets/style/views/auth/index.scss"></style>
 
-
-<style scoped>.auth-container{
-
-
-
-
-} </style>
+<style scoped>
+.auth-container {
+  .resend-section {
+    margin: 20px 0;
+    text-align: center;
+    
+    p {
+      margin-bottom: 8px;
+      color: var(--color-text-secondary, #666);
+      font-size: 14px;
+    }
+    
+    .resend-btn {
+      background: none;
+      border: none;
+      color: var(--color-primary, #e74c3c);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      font-size: 14px;
+      text-decoration: underline;
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        text-decoration: none;
+      }
+    }
+  }
+}
+</style>
