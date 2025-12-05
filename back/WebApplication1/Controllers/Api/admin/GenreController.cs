@@ -5,9 +5,9 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Controllers.Api.Admin
 {
-    [Route("api/admin/[controller]")]
-    [ApiController]
-    [Authorize(Roles = "Admin")]
+[Route("api/admin/[controller]")]
+[ApiController]
+[Authorize(Roles = "Admin,SuperUser")] // ← это корректно!
     public class GenreController : ControllerBase
     {
         private readonly ApplicationContext _context;

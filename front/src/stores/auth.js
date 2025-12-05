@@ -23,6 +23,22 @@ export const useAuthStore = defineStore('auth', () => {
     return `hsl(${hue}, 80%, 45%)`
   })
 
+  // === РОЛЕВЫЕ ПРОВЕРКИ ===
+
+  const isAdmin = computed(() => user.value?.roles?.includes('Admin'))
+  const isSuperUser = computed(() => user.value?.roles?.includes('SuperUser'))
+  const isSupport = computed(() => user.value?.roles?.includes('Support'))
+  const isModerator = computed(() => user.value?.roles?.includes('Moderator'))
+  const isUser = computed(() => user.value?.roles?.includes('User'))
+
+  // Комплексные проверки (как в auth.js из services)
+  const canAccessAdminPanel = computed(() => isAdmin.value)
+  const canAddGames = computed(() => isSuperUser.value || isAdmin.value)
+  const canAccessSupport = computed(() => isSupport.value || isAdmin.value)
+  const canAccessModeration = computed(() => isModerator.value || isAdmin.value)
+
+  // === АУТЕНТИФИКАЦИЯ ===
+
   const login = async (credentials) => {
     try {
       loading.value = true
@@ -32,7 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
         id: data.id,
         name: data.name,
         email: data.email,
-        roles: data.roles 
+        roles: Array.isArray(data.roles) ? data.roles : [data.roles] // Защита на случай строки
       }
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('user', JSON.stringify(userData))
@@ -74,7 +90,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // ➕ НОВАЯ ФУНКЦИЯ: ПОВТОРНАЯ ОТПРАВКА КОДА
   const resendConfirmation = async (email) => {
     try {
       loading.value = true
@@ -97,20 +112,32 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const getToken = () => localStorage.getItem('authToken')
-  const isAdmin = computed(() => user.value?.roles?.includes('Admin'))
 
   return {
+    // Состояния
     isAuthenticated,
     user,
-    userInitial,
-    userColor,
-    isAdmin,
     loading,
     error,
+
+    // Вычисляемые свойства — роли
+    isAdmin,
+    isSuperUser,
+    isSupport,
+    isModerator,
+    isUser,
+    canAccessAdminPanel,
+    canAddGames,
+    canAccessSupport,
+    canAccessModeration,
+    userInitial,
+    userColor,
+
+    // Методы
     login,
     register,
     confirmEmail,
-    resendConfirmation, // ← ОБЯЗАТЕЛЬНО ЭКСПОРТИРУЙ!
+    resendConfirmation,
     logout,
     getToken
   }

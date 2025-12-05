@@ -5,7 +5,7 @@ export const useAdminStore = defineStore('admin', {
   state: () => ({
     users: [],
     games: [],
-    genres: [], // ✅ добавлено
+    genres: [], 
     loading: false
   }),
 
@@ -38,7 +38,10 @@ export const useAdminStore = defineStore('admin', {
       await this.fetchUsers()
     },
 
- 
+    async updateUserRoles(id, roles) {
+  await api.admin.users.updateRoles(id, roles)
+  await this.fetchUsers()
+},
     async fetchGames() {
       this.loading = true
       try {

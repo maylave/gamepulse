@@ -129,7 +129,7 @@ static async Task SeedRolesAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    var roles = new[] { "User", "Admin", "Support" }; 
+    var roles = new[] { "User", "Admin", "Support","SuperUser" }; 
 
     foreach (var roleName in roles)
     {
@@ -138,4 +138,4 @@ static async Task SeedRolesAsync(WebApplication app)
             await roleManager.CreateAsync(new IdentityRole<int>(roleName));
         }
     }
-}
+} 

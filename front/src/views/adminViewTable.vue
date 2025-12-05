@@ -1,8 +1,6 @@
-<!-- src/views/AdminView.vue -->
 <template>
-       <Header />
-     <div class="admin-page">
-
+  <Header />
+  <div class="admin-page">
     <AdminSidebar v-model:active="activeEntity" />
 
     <main class="admin-content">
@@ -11,13 +9,13 @@
         <UButton @click="openModal(null)" class="btn-add">+ Добавить</UButton>
       </div>
 
-    <AdminTable
-  :headers="entityConfig.headers"
-  :rows="formattedItems"
-  @edit="openModal"
-  @delete="handleDelete"
-  :loading="loading"
-/>
+      <AdminTable
+        :headers="entityConfig.headers"
+        :rows="formattedItems"
+        @edit="openModal"
+        @delete="handleDelete"
+        :loading="loading"
+      />
 
       <AdminModal
         v-if="isModalOpen"
@@ -30,8 +28,7 @@
       />
     </main>
   </div>
-    <Footer />
- 
+  <Footer />
 </template>
 
 <script setup>
@@ -55,14 +52,13 @@ const allGenres = ref([])
 
 onMounted(async () => {
   try {
-    await store.fetchGenres() // Убедись, что в store есть genres
+    await store.fetchGenres()
     allGenres.value = store.genres
   } catch (err) {
     console.error('Не удалось загрузить жанры:', err)
   }
 })
 
-// Динамический конфиг — используем функцию или computed
 const getEntityConfig = (entity) => {
   switch (entity) {
     case 'users':
@@ -81,12 +77,12 @@ const getEntityConfig = (entity) => {
             key: 'roles',
             label: 'Роли',
             type: 'multiselect',
-            options: ['User', 'Admin', 'Moderator']
+            options: ['User', 'Admin', 'Moderator', 'SuperUser', 'Support']
           }
         ],
         fetch: () => store.fetchUsers(),
         create: (data) => store.createUser(data),
-        update: (id, data) => store.updateUser(id, data),
+        updateRoles: (id, roles) => store.updateUserRoles(id, roles),
         delete: (id) => store.deleteUser(id)
       }
 
@@ -100,10 +96,7 @@ const getEntityConfig = (entity) => {
           { key: 'category', label: 'Категория' },
           { key: 'developer', label: 'Разработчик' },
           { key: 'releaseDate', label: 'Дата релиза' },
-          {
-            key: 'genreIds',
-            label: 'Жанры'
-          }
+          { key: 'genreIds', label: 'Жанры' }
         ],
         fields: [
           { key: 'title', label: 'Название', type: 'text', required: true },
@@ -201,19 +194,22 @@ function closeModal() {
 }
 
 async function saveItem(data) {
-  // Для даты: преобразуем в ISO-строку, если это Date
-  if (data.releaseDate && typeof data.releaseDate === 'string') {
-    // Если компонент возвращает строку 'YYYY-MM-DD', оставляем как есть
-    // Иначе можно: new Date(data.releaseDate).toISOString().split('T')[0]
-  }
-
   saving.value = true
   try {
     if (editingItem.value) {
-      await entityConfig.value.update(editingItem.value.id, data)
+      // РЕДАКТИРОВАНИЕ
+      if (activeEntity.value === 'users') {
+        // Для пользователей — обновляем ТОЛЬКО РОЛИ
+        await entityConfig.value.updateRoles(editingItem.value.id, data.roles)
+      } else {
+        // Для игр и жанров — полное обновление
+        await entityConfig.value.update(editingItem.value.id, data)
+      }
     } else {
+      // СОЗДАНИЕ
       await entityConfig.value.create(data)
     }
+    
     await entityConfig.value.fetch()
     closeModal()
   } catch (err) {
@@ -237,7 +233,6 @@ async function handleDelete(id) {
 .admin-page {
   display: flex;
   min-height: 100vh;
- 
 }
 
 .admin-content {
@@ -259,21 +254,19 @@ async function handleDelete(id) {
 }
 
 :deep(.btn-add) {
-  
-    background: none;
-    border: 2px solid #333;
-    color: white;
-    box-shadow: 0 0 15px rgba(10, 20, 30, 0.4);
-    font-size: 0.9em !important;
-    border-radius: 10px !important;
-    padding: 10px 18px !important;
-    font-weight: 600;
-    transition: all 0.2s ease;
+  background: none;
+  border: 2px solid #333;
+  color: white;
+  box-shadow: 0 0 15px rgba(10, 20, 30, 0.4);
+  font-size: 0.9em !important;
+  border-radius: 10px !important;
+  padding: 10px 18px !important;
+  font-weight: 600;
+  transition: all 0.2s ease;
 
-    &:hover {
-      border-color: $color-primary;
-      box-shadow: 0 0 20px rgba($color-primary, 0.3);
-    }
+  &:hover {
+    border-color: $color-primary;
+    box-shadow: 0 0 20px rgba($color-primary, 0.3);
+  }
 }
-
 </style>

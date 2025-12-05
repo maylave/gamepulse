@@ -174,6 +174,17 @@ update: (id, quantity) => request(`/cart/${id}`, {
   }
 },
 
+ superUser: {
+    games: {
+      create: (data) => request('/addGame', { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
+      })
+    },
+    genres: {
+      getAll: () => request('/admin/genre')
+    }
+  },
   support: {
    
     getOrCreateChat: () => request('/client/support/chat', { method: 'GET' }),
@@ -201,25 +212,46 @@ update: (id, quantity) => request(`/cart/${id}`, {
         body: JSON.stringify({ content })
       })
   },
-  admin: {
+ 
+admin: {
   games: {
     getAll: () => request('/admin/games'),
     create: (data) => request('/admin/games', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/admin/games/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/admin/games/${id}`, { method: 'DELETE' })
   },
-genres: {
-  getAll: () => request('/admin/genre'),
-  create: (data) => request('/admin/genre', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => request(`/admin/genre/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => request(`/admin/genre/${id}`, { method: 'DELETE' })
-},
+  genres: {
+    getAll: () => request('/admin/genre'),
+    create: (data) => request('/admin/genre', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => request(`/admin/genre/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => request(`/admin/genre/${id}`, { method: 'DELETE' })
+  },
   users: {
+   
     getAll: () => request('/admin/users'),
-    create: (data) => request('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id, data) => request(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    
+    
+    create: (data) => request('/admin/users', { 
+      method: 'POST', 
+      body: JSON.stringify(data) 
+    }),
+    
+    
     delete: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
-    assignRole: (data) => request('/admin/users/assign-role', { method: 'POST', body: JSON.stringify(data) })
+    
+    
+   updateRoles: (id, roles) => request(`/admin/users/${id}/roles`, {
+      method: 'PUT',
+      body: JSON.stringify({ roles })
+    }),
+    
+   
+    resetPassword: (id, newPassword) => request(`/admin/users/${id}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ newPassword })
+    })
+    
+
   }
 }
 }

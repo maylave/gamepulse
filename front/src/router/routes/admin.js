@@ -1,6 +1,7 @@
 import AdminViewTable from '@/views/adminViewTable.vue'
 import AccessDenied from '@/views/AccessDenied.vue'
-import SupportAdminPage from '../../views/SupportAdminPage.vue'
+import SupportAdminPage from '@/views/SupportAdminPage.vue' 
+import SuperUser from '../../views/SuperUser.vue'
 export default [
   {
     path: '/table',
@@ -9,17 +10,26 @@ export default [
     meta: { 
       requiresLoading: true, 
       loadingMessage: 'Загрузка админки...', 
-      requiresAdmin: true 
+      requiresAdminPanel: true 
     }
   },
   {
     path: '/supportAdmin',
     name: 'supportAdmin',
-    component:  SupportAdminPage,
+    component: SupportAdminPage,
     meta: { 
       requiresLoading: true, 
       loadingMessage: 'Загрузка админки...', 
-      requiresAdmin: true 
+      requiresAdminPanel: true 
+    }
+  },
+  {
+    path: '/add-game',
+    name: 'AddGame',
+    component: SuperUser,
+    meta: { 
+      requiresAddGame: true, 
+      requiresLoading: false 
     }
   },
   {
