@@ -40,22 +40,15 @@ import AdminModal from '@/components/admin/AdminModal.vue'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
 
-// === КОНСТАНТЫ: категории и теги ===
-const CATEGORIES = [
-  { value: 'action', label: 'Экшен' },
-  { value: 'rpg', label: 'RPG' },
-  { value: 'strategy', label: 'Стратегия' },
-  { value: 'adventure', label: 'Приключения' },
-  { value: 'simulation', label: 'Симуляторы' },
-  { value: 'sports', label: 'Спорт' },
-  { value: 'other', label: 'Другое' }
-]
+
 
 const TAGS = [
   { value: 'Новинка', label: 'Новинка' },
   { value: 'Бесплатно', label: 'Бесплатно' },
   { value: 'Скоро', label: 'Скоро' },
   { value: 'Хит', label: 'Хит' },
+  { value: 'top', label: 'top' },
+  { value: 'free', label: 'free' },
   { value: '', label: 'Без тега' }
 ]
 

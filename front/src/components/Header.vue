@@ -28,7 +28,7 @@
       
         <div class="cart-icon" @click="openCart" :class="{ jump: shouldJump }">
           <i class="fas fa-shopping-cart"></i>
-          <span v-if="cartStore.itemCount > 0" class="cart-count">{{ cartStore.itemCount }}</span>
+          <span v-if="cartStore.itemCount > 0 && authStore.isAuthenticated" class="cart-count">{{ cartStore.itemCount }}</span>
         </div>
 
         <WishlistButton />
@@ -86,12 +86,12 @@
       <div class="nav-item cart-center" @click="openCart" :class="{ jump: shouldJump }">
         <i class="fas fa-shopping-cart"></i>
         <span>Корзина</span>
-        <span v-if="cartStore.itemCount > 0" class="mobile-cart-count">{{ cartStore.itemCount }}</span>
+        <span v-if="cartStore.itemCount > 0 && authStore.isAuthenticated" class="mobile-cart-count">{{ cartStore.itemCount }}</span>
       </div>
 
       <template v-if="authStore.isAuthenticated">
         <div ref="mobileMenuRef" class="nav-item user-avatar-mobile" @click="toggleMenu">
-          <!-- Mobile Avatar -->
+      
           <div class="user-avatar mobile">
             <img
               v-if="authStore.user?.avatarUrl && !avatarLoadError"
@@ -172,7 +172,7 @@ function handleAvatarError() {
 watch(
   () => cartStore.itemCount,
   (newCount, oldCount) => {
-    if (newCount > oldCount) {
+    if (newCount > oldCount && authStore.isAuthenticated) {
       shouldJump.value = true
       setTimeout(() => (shouldJump.value = false), 500)
     }

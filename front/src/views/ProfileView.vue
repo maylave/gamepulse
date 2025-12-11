@@ -13,11 +13,7 @@
               :initial-profile="profile"
               @update="handleProfileUpdate"
             />
-            <OrdersList
-              v-else-if="activeTab === 'orders'"
-              key="orders"
-            />
-            <SupportInfo v-else key="support" />
+           
           </transition>
         </main>
       </div>
@@ -30,10 +26,10 @@
 import { ref, onMounted } from 'vue'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
-import ProfileSidebar from '../components/profile/ProfileSidebar.vue'
-import ProfileForm from '../components/profile/ProfileForm.vue'
-import OrdersList from '../components/profile/OrdersList.vue'
-import SupportInfo from '../components/profile/SupportInfo.vue'
+import ProfileSidebar from '@/components/profile/ProfileSidebar.vue'
+import ProfileForm from '@/components/profile/ProfileForm.vue'
+import OrdersList from '@/components/profile/OrdersList.vue'
+import SupportInfo from '@/components/profile/SupportInfo.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()

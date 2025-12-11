@@ -1,17 +1,18 @@
 <template>
-  <div id="app">
+  <div id="app" class="app-layout">
     <LoadingSpinner
       :is-loading="uiStore.isLoading"
       :text="uiStore.loadingMessage"
     />
     <router-view />
+     <NotificationModal />
   </div>
 </template>
 
 <script setup>
 import { useUiStore } from '@/stores/ui'
 import LoadingSpinner from './components/global/LoadingSpinner.vue'
-
+import NotificationModal from '@/components/NotificationModal.vue'
 const uiStore = useUiStore()
 </script>
 
@@ -26,4 +27,8 @@ const uiStore = useUiStore()
     padding-bottom: 0;
   }
 }
+#app{
+   min-height: 100vh;
+}
+
 </style>

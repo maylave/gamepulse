@@ -124,6 +124,10 @@ const openCreateGameModal = () => {
   color: var(--text-primary, #fff);
   min-height: 100vh;
 }
+.container{
+  padding-top: 2rem;
+}
+
 .game{
     width: 250px;
 }

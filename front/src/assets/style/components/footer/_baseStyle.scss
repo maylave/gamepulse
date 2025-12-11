@@ -3,8 +3,9 @@
 
 
   .footer {
-
+   
     &-grid {
+        margin-top: auto; 
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 2.5rem;
@@ -44,6 +45,6 @@
     padding: 3rem 0 2rem;
     color: $footer-text;
     font-size: 0.95rem;
-  //border-top: $color-card solid 1px;
+
 
   }

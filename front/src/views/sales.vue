@@ -127,7 +127,9 @@ const openCreateGameModal = () => {
 .game{
     width: 250px;
 }
-
+.container{
+  padding-top: 2rem;
+}
 
 .promo-title {
   font-size: 2rem;

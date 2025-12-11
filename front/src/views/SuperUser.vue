@@ -34,8 +34,15 @@ const router = useRouter()
 const saving = ref(false)
 const allGenres = ref([])
 
-// Модалка всегда открыта — состояние не нужно, но оставим для совместимости
-// (AdminModal не требует v-if, если он всегда виден)
+const TAGS = [
+  { value: 'Новинка', label: 'Новинка' },
+  { value: 'Бесплатно', label: 'Бесплатно' },
+  { value: 'Скоро', label: 'Скоро' },
+  { value: 'Хит', label: 'Хит' },
+  { value: 'top', label: 'top' },
+  { value: 'free', label: 'free' },
+  { value: '', label: 'Без тега' }
+]
 const isModalOpen = ref(true)
 
 onMounted(async () => {
@@ -48,24 +55,52 @@ onMounted(async () => {
 })
 
 const gameFields = ref([
-  { key: 'title', label: 'Название', type: 'text', required: true },
-  { key: 'price', label: 'Цена', type: 'number', step: '0.01', required: true },
-  { key: 'description', label: 'Описание', type: 'textarea' },
-  { key: 'oldPrice', label: 'Старая цена', type: 'number', step: '0.01' },
-  { key: 'tag', label: 'Тег', type: 'text' },
-  { key: 'category', label: 'Категория', type: 'text' },
-  { key: 'developer', label: 'Разработчик', type: 'text' },
-  { key: 'publisher', label: 'Издатель', type: 'text' },
-  { key: 'ageRating', label: 'Возрастной рейтинг', type: 'number' },
-  { key: 'isPreorder', label: 'Предзаказ', type: 'checkbox' },
-  { key: 'imageUrl', label: 'URL изображения', type: 'text' },
-  { key: 'releaseDate', label: 'Дата релиза', type: 'date' },
-  {
-    key: 'genreIds',
-    label: 'Жанры',
-    type: 'multiselect',
-    options: []
-  }
+  
+      
+          { key: 'title', label: 'Название', type: 'text', required: true },
+          { key: 'price', label: 'Цена', type: 'number', step: '0.01', required: true },
+          { key: 'description', label: 'Описание', type: 'textarea' },
+          { key: 'oldPrice', label: 'Старая цена', type: 'number', step: '0.01' },
+          {
+            key: 'tag',
+            label: 'Тег',
+            type: 'select',
+            options: TAGS
+          },
+          {
+            key: 'category',
+            label: 'Категория',
+            type: 'select',
+            options: TAGS
+          },
+          { key: 'developer', label: 'Разработчик', type: 'text' },
+          { key: 'publisher', label: 'Издатель', type: 'text' },
+          { key: 'ageRating', label: 'Возрастной рейтинг', type: 'number' },
+          { key: 'isPreorder', label: 'Предзаказ', type: 'checkbox' },
+          { key: 'imageUrl', label: 'Главное изображение (URL)', type: 'text' },
+          {
+            key: 'externalUrl',
+            label: 'Внешняя ссылка (Steam, Epic и т.д.)',
+            type: 'text'
+          },
+          {
+            key: 'releaseDate',
+            label: 'Дата релиза',
+            type: 'date'
+          },
+          {
+            key: 'genreIds',
+            label: 'Жанры',
+            type: 'multiselect',
+            options: allGenres.value.map(g => ({ label: g.name, value: g.id }))
+          },
+          {
+            key: 'mediaUrls',
+            label: 'Дополнительные медиа (URL, по одному на строку)',
+            type: 'textarea',
+            placeholder: 'https://example.com/screen1.jpg\nhttps://example.com/video.mp4'
+          }
+  
 ])
 
 watch(

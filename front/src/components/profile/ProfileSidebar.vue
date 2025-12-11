@@ -23,8 +23,7 @@ const props = defineProps({
 
 const tabs = [
   { id: 'profile', label: 'Профиль', icon: 'fas fa-user' },
-  { id: 'orders', label: 'Мои покупки', icon: 'fas fa-receipt' },
-  { id: 'support', label: 'Поддержка', icon: 'fas fa-headset' }
+ 
 ]
 
 const setActiveTab = (id) => {

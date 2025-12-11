@@ -59,9 +59,9 @@ import { computed, ref } from 'vue'
 import { useWishlistStore } from '@/stores/wishlistStore'
 import { useCartStore } from '@/stores/cart'
 import { useRouter } from 'vue-router' 
-
-
-
+import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/NotificationStore'
+const authStore = useAuthStore()
 const router = useRouter() 
 const props = defineProps({
   game: {
@@ -79,26 +79,33 @@ const props = defineProps({
 const isAdded = ref(false);
 
 const addToWishlist = () => {
- 
-  isAdded.value = true;
+ if(authStore.isAuthenticated){
+   isAdded.value = true;
+
   
 
   setTimeout(() => {
     isAdded.value = false;
   }, 1000);
+ }
+ else{
+  notificationStore.showWarning('Войдите в аккаунт, чтобы добавить в корзину', 3000)    
+ }
+ 
 };
 const cartStore = useCartStore()
 const wishlistStore = useWishlistStore()
 const wishlistLoading = ref(false)
-
+const notificationStore = useNotificationStore() 
 
 const isInWishlist = computed(() => {
-  if (props.isPlaceholder || props.isAddNew) return false
+  if ((props.isPlaceholder || props.isAddNew) && !authStore.isAuthenticated) return false
   return wishlistStore.isGameInWishlist(props.game.id)
 })
 
 const toggleWishlist = async (e) => {
-  e.stopPropagation()
+  if(authStore.isAuthenticated){
+e.stopPropagation()
   wishlistLoading.value = true
   try {
     await wishlistStore.toggleWishlist(props.game)
@@ -107,6 +114,11 @@ const toggleWishlist = async (e) => {
   } finally {
     wishlistLoading.value = false
   }
+  }
+  else{
+     notificationStore.showWarning('Войдите в аккаунт, чтобы добавить в корзину', 3000)
+  }
+  
 }
 
 const buttonText = computed(() => {
@@ -117,9 +129,15 @@ const buttonText = computed(() => {
 })
 
 const addToCart = (e) => {
-  e.stopPropagation() 
+  if(authStore.isAuthenticated){
+      e.stopPropagation() 
   cartStore.addToCart(props.game)
-  console.log('Добавлено в корзину:', props.game.title)
+  
+  }
+  else{
+     notificationStore.showWarning('Войдите в аккаунт, чтобы добавить в корзину', 3000)
+  }
+
 }
 
 const tagStyle = computed(() => {

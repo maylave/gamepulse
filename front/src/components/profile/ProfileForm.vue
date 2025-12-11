@@ -224,7 +224,7 @@ const saveProfile = async () => {
 
     await api.profile.update(payload)
 
-    // 🔁 Загружаем актуальные данные с сервера
+ 
     await getProfile()
 
     alert(`Профиль обновлён!\nПривет, ${localName.value}!`)

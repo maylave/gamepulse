@@ -1,6 +1,6 @@
 <template>
  <section class="hero">
-    <img class="image" src="https://sun9-29.userapi.com/6GNO3P8tBiwM5-OCMWMYHeAIq1jc4LThDTXYiQ/XLJmrhzod98.jpg" alt="">
+   
     <h1>Распродажа «Зимний взрыв» - скидки до 75%!</h1>
     <p>Более 500 игр со скидками. Только до конца недели. Не упусти шанс!</p>
     <div class="countdown" id="countdown">
@@ -56,13 +56,3 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped src="@/assets/style/components/hero/main.scss"></style>
-<style>.image{
-  display: flex;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -10;
- backdrop-filter: blur(100px);
- background-color: rgba(0, 0, 0, .8);
- width: 100%;
-}</style>
