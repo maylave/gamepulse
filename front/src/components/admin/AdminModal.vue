@@ -1,4 +1,3 @@
-<!-- src/components/admin/AdminModal.vue -->
 <template>
   <div class="modal-overlay" @click="emit('close')">
     <div class="modal" @click.stop>
@@ -9,12 +8,47 @@
           <div v-for="field in fields" :key="field.key" class="form-group">
             <label>{{ field.label }}</label>
 
+            <!-- Текстовое поле / число / дата -->
+            <input
+              v-if="['text', 'number', 'date', 'email'].includes(field.type)"
+              :type="field.type"
+              v-model="formData[field.key]"
+              :step="field.step"
+              :required="field.required"
+            />
+
+            <!-- Многострочное поле -->
             <textarea
-              v-if="field.type === 'textarea'"
+              v-else-if="field.type === 'textarea'"
               v-model="formData[field.key]"
               :required="field.required"
             ></textarea>
 
+            <!-- Выпадающий список (select) -->
+            <select
+              v-else-if="field.type === 'select'"
+              v-model="formData[field.key]"
+              :required="field.required"
+            >
+              <option v-for="opt in field.options" :key="getOptionValue(opt)" :value="getOptionValue(opt)">
+                {{ getOptionLabel(opt) }}
+              </option>
+            </select>
+
+            <!-- Чекбокс -->
+            <div v-else-if="field.type === 'checkbox'" class="checkbox-group">
+              <input
+                type="checkbox"
+                :id="`checkbox-${field.key}`"
+                :checked="!!formData[field.key]"
+                @change="e => formData[field.key] = e.target.checked"
+              />
+              <label :for="`checkbox-${field.key}`" class="checkbox-label">
+                {{ field.label }}
+              </label>
+            </div>
+
+          
             <div
               v-else-if="field.type === 'multiselect' && field.options"
               class="multiselect"
@@ -53,28 +87,17 @@
               </div>
             </div>
 
-            <input
-              v-else
-              :type="field.type"
-              v-model="formData[field.key]"
-              :step="field.step"
-              :required="field.required"
-            />
           </div>
         </form>
       </div>
 
-     
-
       <div class="modal-actions">
-      
         <UButton type="submit" @click="onSubmit" :loading="saving" class="btn">Сохранить</UButton>
         <UButton @click="emit('close')" variant="ghost" class="btn">Отмена</UButton>
       </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, watch } from 'vue'
 
@@ -90,7 +113,7 @@ const formData = ref({})
 const openDropdown = ref(null)
 const fileInput = ref(null)
 
-// Вспомогательные функции
+
 const getOptionValue = (opt) => opt?.value !== undefined ? opt.value : opt
 const getOptionLabel = (opt) => opt?.label !== undefined ? opt.label : opt
 
@@ -144,7 +167,7 @@ watch(() => props.item, (item) => {
 function onSubmit() {
   const data = { ...formData.value }
 
-  // Приведение к правильным типам
+
   if (typeof data.isPreorder === 'string') {
     data.isPreorder = data.isPreorder.toLowerCase() === 'true'
   }
@@ -199,7 +222,7 @@ function onSubmit() {
     margin: 0 0 1rem;
     color: var(--color-text);
     font-size: 1.3rem;
-    flex-shrink: 0; // не сжимается при скролле
+    flex-shrink: 0; 
   }
 
   .modal-scrollable {
@@ -264,6 +287,54 @@ function onSubmit() {
       min-height: 90px;
       resize: vertical;
     }
+    
+select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-family: inherit;
+  background: rgba(0, 0, 0, 0.2);
+  color: $color-primary;
+  appearance: none; 
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+
+  &:focus {
+    outline: none;
+    background-color: rgba(0, 0, 0, 1);
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.3);
+  }
+   .placeholder {
+      color: var(--color-text-secondary);
+      font-style: italic;
+    }
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: $color-primary;
+    cursor: pointer;
+  }
+
+  .checkbox-label {
+    margin: 0;
+    font-weight: normal;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+}
   }
 .modal-actions {
     display: flex;

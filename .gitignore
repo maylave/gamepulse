@@ -36,7 +36,7 @@ publish/
 **/bin/Release/**/publish/
 
 # ASP.NET Core
-wwwroot/
+
 appsettings.Development.json
 appsettings.Staging.json
 appsettings.Production.json
@@ -46,7 +46,7 @@ front/dist/
 front/node_modules/
 front/.vite/
 
-# Vite specific
+
 front/.vite/
 front/.vite/deps/
 front/.vite/manifest.json
@@ -79,6 +79,3 @@ Logs
 *.log
 
 
-
-# Игнорируем сам .gitignore (если он уже в репозитории, это не нужно)
-#.gitignore

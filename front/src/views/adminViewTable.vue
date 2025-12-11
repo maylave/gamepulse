@@ -40,6 +40,25 @@ import AdminModal from '@/components/admin/AdminModal.vue'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
 
+// === КОНСТАНТЫ: категории и теги ===
+const CATEGORIES = [
+  { value: 'action', label: 'Экшен' },
+  { value: 'rpg', label: 'RPG' },
+  { value: 'strategy', label: 'Стратегия' },
+  { value: 'adventure', label: 'Приключения' },
+  { value: 'simulation', label: 'Симуляторы' },
+  { value: 'sports', label: 'Спорт' },
+  { value: 'other', label: 'Другое' }
+]
+
+const TAGS = [
+  { value: 'Новинка', label: 'Новинка' },
+  { value: 'Бесплатно', label: 'Бесплатно' },
+  { value: 'Скоро', label: 'Скоро' },
+  { value: 'Хит', label: 'Хит' },
+  { value: '', label: 'Без тега' }
+]
+
 const store = useAdminStore()
 const activeEntity = ref('users')
 const isModalOpen = ref(false)
@@ -47,7 +66,6 @@ const editingItem = ref(null)
 const saving = ref(false)
 const loading = computed(() => store.loading)
 
-// Загружаем жанры один раз для использования в multiselect
 const allGenres = ref([])
 
 onMounted(async () => {
@@ -58,6 +76,13 @@ onMounted(async () => {
     console.error('Не удалось загрузить жанры:', err)
   }
 })
+
+const refreshGenresIfNeeded = async () => {
+  if (activeEntity.value === 'games') {
+    await store.fetchGenres()
+    allGenres.value = store.genres
+  }
+}
 
 const getEntityConfig = (entity) => {
   switch (entity) {
@@ -96,20 +121,35 @@ const getEntityConfig = (entity) => {
           { key: 'category', label: 'Категория' },
           { key: 'developer', label: 'Разработчик' },
           { key: 'releaseDate', label: 'Дата релиза' },
-          { key: 'genreIds', label: 'Жанры' }
+          { key: 'genreNames', label: 'Жанры' }
         ],
         fields: [
           { key: 'title', label: 'Название', type: 'text', required: true },
           { key: 'price', label: 'Цена', type: 'number', step: '0.01', required: true },
           { key: 'description', label: 'Описание', type: 'textarea' },
           { key: 'oldPrice', label: 'Старая цена', type: 'number', step: '0.01' },
-          { key: 'tag', label: 'Тег', type: 'text' },
-          { key: 'category', label: 'Категория', type: 'text' },
+          {
+            key: 'tag',
+            label: 'Тег',
+            type: 'select',
+            options: TAGS
+          },
+          {
+            key: 'category',
+            label: 'Категория',
+            type: 'select',
+            options: TAGS
+          },
           { key: 'developer', label: 'Разработчик', type: 'text' },
           { key: 'publisher', label: 'Издатель', type: 'text' },
           { key: 'ageRating', label: 'Возрастной рейтинг', type: 'number' },
           { key: 'isPreorder', label: 'Предзаказ', type: 'checkbox' },
-          { key: 'imageUrl', label: 'URL изображения', type: 'text' },
+          { key: 'imageUrl', label: 'Главное изображение (URL)', type: 'text' },
+          {
+            key: 'externalUrl',
+            label: 'Внешняя ссылка (Steam, Epic и т.д.)',
+            type: 'text'
+          },
           {
             key: 'releaseDate',
             label: 'Дата релиза',
@@ -120,11 +160,51 @@ const getEntityConfig = (entity) => {
             label: 'Жанры',
             type: 'multiselect',
             options: allGenres.value.map(g => ({ label: g.name, value: g.id }))
+          },
+          {
+            key: 'mediaUrls',
+            label: 'Дополнительные медиа (URL, по одному на строку)',
+            type: 'textarea',
+            placeholder: 'https://example.com/screen1.jpg\nhttps://example.com/video.mp4'
           }
         ],
         fetch: () => store.fetchGames(),
-        create: (data) => store.createGame(data),
-        update: (id, data) => store.updateGame(id, data),
+        create: (data) => {
+          const payload = { ...data }
+          if (payload.mediaUrls) {
+            payload.media = payload.mediaUrls
+              .split('\n')
+              .map(url => url.trim())
+              .filter(url => url)
+              .map(url => ({
+                url,
+                type: /\.(mp4|webm|mov|avi)$/i.test(url) ? 'video' : 'image'
+              }))
+            delete payload.mediaUrls
+          }
+          if (payload.genreIds) {
+            payload.genreIds = payload.genreIds.map(id => parseInt(id))
+          }
+          return store.createGame(payload)
+        },
+        update: (id, data) => {
+          const payload = { ...data }
+          if (payload.mediaUrls) {
+            payload.media = payload.mediaUrls
+              .split('\n')
+              .map(url => url.trim())
+              .filter(url => url)
+              .map(url => ({
+                url,
+                type: /\.(mp4|webm|mov|avi)$/i.test(url) ? 'video' : 'image'
+              }))
+            delete payload.mediaUrls
+          }
+          if (payload.genreIds) {
+            payload.genreIds = payload.genreIds.map(id => parseInt(id))
+          }
+          return store.updateGame(id, payload)
+        },
         delete: (id) => store.deleteGame(id)
       }
 
@@ -156,21 +236,24 @@ const formattedItems = computed(() => {
   return items.value.map(item => {
     let newItem = { ...item }
 
-    // Форматируем дату для отображения
+    // Показываем понятные названия категорий
+    if (activeEntity.value === 'games' && item.category) {
+      const cat = CATEGORIES.find(c => c.value === item.category)
+      newItem.category = cat ? cat.label : item.category
+    }
+
     if (activeEntity.value === 'games' && item.releaseDate) {
       newItem.releaseDate = new Date(item.releaseDate).toLocaleDateString('ru-RU')
     }
 
-    // Форматируем жанры как названия
     if (activeEntity.value === 'games' && Array.isArray(item.genreIds)) {
       const genreNames = item.genreIds
         .map(id => allGenres.value.find(g => g.id === id)?.name)
         .filter(Boolean)
         .join(', ')
-      newItem.genreIds = genreNames || '—'
+      newItem.genreNames = genreNames || '—'
     }
 
-    // Форматируем роли у пользователей
     if (activeEntity.value === 'users' && Array.isArray(item.roles)) {
       newItem.roles = item.roles.join(', ')
     }
@@ -179,12 +262,18 @@ const formattedItems = computed(() => {
   })
 })
 
-watch(activeEntity, () => {
-  entityConfig.value?.fetch()
+watch(activeEntity, async () => {
+  await refreshGenresIfNeeded()
+  await entityConfig.value?.fetch()
 }, { immediate: true })
 
 function openModal(item) {
-  editingItem.value = item ? { ...item } : null
+  if (item && activeEntity.value === 'games') {
+    const mediaUrls = item.media?.map(m => m.url).join('\n') || ''
+    editingItem.value = { ...item, mediaUrls }
+  } else {
+    editingItem.value = item ? { ...item } : null
+  }
   isModalOpen.value = true
 }
 
@@ -197,19 +286,16 @@ async function saveItem(data) {
   saving.value = true
   try {
     if (editingItem.value) {
-      // РЕДАКТИРОВАНИЕ
       if (activeEntity.value === 'users') {
-        // Для пользователей — обновляем ТОЛЬКО РОЛИ
         await entityConfig.value.updateRoles(editingItem.value.id, data.roles)
       } else {
-        // Для игр и жанров — полное обновление
         await entityConfig.value.update(editingItem.value.id, data)
       }
     } else {
-      // СОЗДАНИЕ
       await entityConfig.value.create(data)
     }
-    
+
+    await refreshGenresIfNeeded()
     await entityConfig.value.fetch()
     closeModal()
   } catch (err) {
@@ -222,6 +308,7 @@ async function saveItem(data) {
 async function handleDelete(id) {
   if (confirm('Удалить запись?')) {
     await entityConfig.value.delete(id)
+    await refreshGenresIfNeeded()
     await entityConfig.value.fetch()
   }
 }
