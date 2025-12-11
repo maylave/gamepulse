@@ -1,30 +1,40 @@
-<!-- src/components/game/GameReviews.vue -->
 <template>
   <section class="reviews-section">
     <h2 class="section-title">Отзывы игроков</h2>
-    
+
     <!-- Список отзывов -->
-    <div class="reviews-grid">
-      <div class="review-card" v-for="review in game.reviews" :key="review.id">
+    <div v-if="loading" class="loading-reviews">
+      Загрузка отзывов...
+    </div>
+    <div v-else-if="reviews.length === 0" class="no-reviews">
+      Пока никто не оставил отзыв. Будьте первым!
+    </div>
+    <div v-else class="reviews-grid">
+      <div class="review-card" v-for="review in reviews" :key="review.id">
         <div class="review-header">
-          <div class="review-avatar">{{ review.author[0] }}</div>
+          <div class="review-avatar">
+            {{ review.authorName ? review.authorName[0].toUpperCase() : '?' }}
+          </div>
           <div>
-            <div class="review-author">{{ review.author }}</div>
+            <div class="review-author">{{ review.authorName || 'Аноним' }}</div>
             <div class="review-rating">
-              <i v-for="n in 5" :key="n" :class="n <= review.rating ? 'fas fa-star' : 'far fa-star'"></i>
+              <i
+                v-for="n in 5"
+                :key="n"
+                :class="n <= review.rating ? 'fas fa-star' : 'far fa-star'"
+              ></i>
             </div>
           </div>
         </div>
         <div class="review-text">{{ review.text }}</div>
-        <div class="review-date">{{ formatDate(review.date) }}</div>
+        <div class="review-date">{{ formatDate(review.createdAt) }}</div>
       </div>
     </div>
 
- 
+    <!-- Форма отзыва -->
     <div v-if="isAuthenticated" class="review-form">
       <h3>Оставить отзыв</h3>
       <form @submit.prevent="submitReview">
-        <!-- Выбор рейтинга -->
         <div class="rating-input">
           <label>Ваша оценка:</label>
           <div class="stars">
@@ -42,7 +52,6 @@
           </div>
         </div>
 
-        
         <div class="text-input">
           <label for="review-text">Ваш отзыв:</label>
           <textarea
@@ -55,10 +64,13 @@
           <div class="char-count">{{ newReviewText.length }}/500</div>
         </div>
 
-        <!-- Кнопка -->
         <button type="submit" class="submit-btn" :disabled="isSubmitting">
           {{ isSubmitting ? 'Отправка...' : 'Опубликовать' }}
         </button>
+
+        <div v-if="submitError" class="error-message">
+          {{ submitError }}
+        </div>
       </form>
     </div>
 
@@ -69,8 +81,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { api } from '@/services/api'
 
 const props = defineProps({
   game: {
@@ -82,11 +95,17 @@ const props = defineProps({
 const authStore = useAuthStore()
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
-// Данные формы
+// Отзывы
+const reviews = ref([])
+const loading = ref(false)
+
+// Форма
 const newRating = ref(5)
 const newReviewText = ref('')
 const isSubmitting = ref(false)
+const submitError = ref(null)
 
+// Форматирование даты
 const formatDate = (dateString) => {
   const date = new Date(dateString)
   return date.toLocaleDateString('ru-RU', {
@@ -96,40 +115,67 @@ const formatDate = (dateString) => {
   })
 }
 
-// Отправка отзыва (временно в мок-данные)
+// Загрузка отзывов
+const fetchReviews = async () => {
+  loading.value = true
+  submitError.value = null
+  try {
+    const response = await api.reviews.getByGame(props.game.id)
+    // Убедимся, что данные — массив
+    reviews.value = Array.isArray(response) ? response : response?.data || []
+  } catch (err) {
+    console.error('Ошибка загрузки отзывов:', err)
+    reviews.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Отправка отзыва
 const submitReview = async () => {
-  if (!newReviewText.value.trim()) return
+  const text = newReviewText.value.trim()
+  if (!text) return
 
   isSubmitting.value = true
+  submitError.value = null
 
   try {
-    // ⚠️ Пока добавляем в мок-данные (в будущем — API)
-    const newReview = {
-      id: Date.now(),
-      author: authStore.user?.name || 'Пользователь',
+    const payload = {
+      gameId: props.game.id,
       rating: newRating.value,
-      text: newReviewText.value.trim(),
-      date: new Date().toISOString().split('T')[0]
+      text: text
     }
 
-    // Добавляем отзыв в игру (локально)
-    props.game.reviews = [...props.game.reviews, newReview]
+    const response = await api.reviews.create(payload)
+
+    // 💡 ВАЖНО: добавляем полученный отзыв в начало списка
+    reviews.value = [response, ...reviews.value]
 
     // Сброс формы
     newReviewText.value = ''
     newRating.value = 5
 
-    // Уведомление
-    alert('✅ Отзыв успешно добавлен!')
+    // Успех — можно показать уведомление (опционально)
   } catch (err) {
-    console.error('Ошибка при добавлении отзыва:', err)
-    alert('❌ Не удалось добавить отзыв. Попробуйте позже.')
+    console.error('Ошибка отправки отзыва:', err)
+    const msg = err?.response?.data?.message ||
+                err?.message ||
+                'Не удалось отправить отзыв. Попробуйте позже.'
+    submitError.value = msg
   } finally {
     isSubmitting.value = false
   }
 }
 
+// Загружаем отзывы при монтировании
+onMounted(() => {
+  fetchReviews()
+})
 
+// 🔁 Обновляем отзывы, если ID игры изменилось (например, переход между играми)
+watch(() => props.game.id, () => {
+  fetchReviews()
+})
 </script>
 
 <style scoped lang="scss">
@@ -155,6 +201,14 @@ const submitReview = async () => {
     background: $color-primary;
     border-radius: 2px;
   }
+}
+
+.loading-reviews,
+.no-reviews {
+  text-align: center;
+  padding: 2rem;
+  color: $color-text-secondary;
+  font-style: italic;
 }
 
 .reviews-grid {
@@ -210,7 +264,6 @@ const submitReview = async () => {
   }
 }
 
-// Форма отзыва
 .review-form {
   background: $color-card;
   border-radius: 16px;
@@ -309,6 +362,12 @@ const submitReview = async () => {
       cursor: not-allowed;
     }
   }
+
+  .error-message {
+    color: #ff6b6b;
+    margin-top: 0.8rem;
+    font-size: 0.95rem;
+  }
 }
 
 .review-login-prompt {
@@ -319,7 +378,6 @@ const submitReview = async () => {
   a {
     color: $color-primary;
     text-decoration: none;
-
     &:hover {
       text-decoration: underline;
     }

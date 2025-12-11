@@ -2,7 +2,7 @@
   <div class="accordion" :class="{ 'no-animation': !animated }">
     <div
       v-for="(item, index) in items"
-      :key="item.id || index"
+      :key="typeof item === 'object' && item && 'id' in item ? item.id : index"
       class="accordion-item"
       :class="{ active: activeIndex === index }"
     >

@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: GameStoreDb
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data  
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U root1 -d GameStoreDb"]
       interval: 5s
@@ -21,13 +21,14 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=GameStoreDb;Username=root1;Password=root
+    volumes:
+      - uploads_data:/app/wwwroot/uploads  
     depends_on:
       postgres:
         condition: service_healthy
 
   frontend:
     build: ./front
-   
     depends_on:
       - webapp
 
@@ -43,3 +44,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:  

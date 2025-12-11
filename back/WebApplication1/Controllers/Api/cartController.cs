@@ -20,7 +20,7 @@ namespace WebApplication1.Controllers.Api
             _userManager = userManager;
         }
 
-        // GET: api/cart
+       
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CartItemDto>>> GetCart()
         {
@@ -115,7 +115,7 @@ public async Task<ActionResult<CartItemDto>> UpdateCartItem(int id, [FromBody] U
                 .FirstOrDefaultAsync(c => c.Id == id && c.UserId == user.Id);
  if (cartItem == null)
     {
-        // Логируем, что не нашли
+       
         Console.WriteLine($"Элемент корзины {id} для пользователя {user.Id} НЕ найден");
         return NotFound("Элемент корзины не найден");
     }   

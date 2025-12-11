@@ -30,8 +30,7 @@
 </template>
 
 <script setup>
-import { defineEmits } from 'vue'
-
+import { useRouter } from 'vue-router'
 
 const genres = [
   { id: 1, name: 'Экшен', icon: '<i class="fas fa-fist-raised"></i>' },
@@ -42,23 +41,26 @@ const genres = [
   { id: 6, name: 'Хоррор', icon: '<i class="fas fa-ghost"></i>' }
 ]
 
-
-const emit = defineEmits(['genre-selected'])
+const router = useRouter()
 
 const selectGenre = (genre) => {
-  emit('genre-selected', genre)
+  
+  router.push({
+    path: '/catalog',
+    query: { genres: genre.id }
+  })
+}
+
+const onCarouselChange = () => {
+  
 }
 </script>
 
 <style lang="scss" scoped src="@/assets/style/components/GenreCategories/main.scss"></style>
 
-
 <style scoped>
 .categories {
- 
   gap: 1.5rem;
   margin-bottom: 3.5rem;
 }
-
-
 </style>

@@ -43,7 +43,7 @@
 
    
     <div v-else-if="isPlaceholder" class="placeholder-button">
-      <button @click.stop="$emit('loadMore')">Показать ещё</button>
+      <button @click="router.push('/catalog')" @click.stop="$emit('loadMore')">Показать ещё</button>
     </div>
 
  
@@ -58,7 +58,11 @@
 import { computed, ref } from 'vue'
 import { useWishlistStore } from '@/stores/wishlistStore'
 import { useCartStore } from '@/stores/cart'
+import { useRouter } from 'vue-router' 
 
+
+
+const router = useRouter() 
 const props = defineProps({
   game: {
     type: Object,

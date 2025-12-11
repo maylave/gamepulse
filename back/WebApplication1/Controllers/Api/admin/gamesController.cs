@@ -21,7 +21,8 @@ namespace WebApplication1.Controllers.Api.Admin
         public async Task<ActionResult<List<GameDto>>> GetGames()
         {
             var games = await _context.Games
-                .Include(g => g.GameGenres) // нужно, чтобы получить GenreId
+                .Include(g => g.GameGenres)
+                .Include(g => g.Media) // ← Включаем медиа
                 .ToListAsync();
 
             var dtos = games.Select(g => new GameDto
@@ -39,7 +40,14 @@ namespace WebApplication1.Controllers.Api.Admin
                 IsPreorder = g.IsPreorder,
                 Developer = g.Developer,
                 Publisher = g.Publisher,
-                GenreIds = g.GameGenres.Select(gg => gg.GenreId).ToList()
+                ExternalUrl = g.ExternalUrl, // ←
+                GenreIds = g.GameGenres.Select(gg => gg.GenreId).ToList(),
+                Media = g.Media.Select(m => new MediaDto // ←
+                {
+                    Id = m.Id,
+                    Url = m.Url,
+                    Type = m.Type
+                }).ToList()
             }).ToList();
 
             return Ok(dtos);
@@ -50,6 +58,7 @@ namespace WebApplication1.Controllers.Api.Admin
         {
             var game = await _context.Games
                 .Include(g => g.GameGenres)
+                .Include(g => g.Media) // ←
                 .FirstOrDefaultAsync(g => g.Id == id);
 
             if (game == null)
@@ -70,7 +79,14 @@ namespace WebApplication1.Controllers.Api.Admin
                 IsPreorder = game.IsPreorder,
                 Developer = game.Developer,
                 Publisher = game.Publisher,
-                GenreIds = game.GameGenres.Select(gg => gg.GenreId).ToList()
+                ExternalUrl = game.ExternalUrl, // ←
+                GenreIds = game.GameGenres.Select(gg => gg.GenreId).ToList(),
+                Media = game.Media.Select(m => new MediaDto // ←
+                {
+                    Id = m.Id,
+                    Url = m.Url,
+                    Type = m.Type
+                }).ToList()
             };
         }
 
@@ -90,80 +106,133 @@ namespace WebApplication1.Controllers.Api.Admin
                 .Select(g => g.Id)
                 .ToListAsync();
 
-            if (existingGenreIds.Count != dto.GenreIds.Count)
+            if (existingGenreIds.Count != dto.GenreIds.Distinct().Count())
                 return BadRequest("One or more genres not found.");
 
             var game = new Game
             {
-                Title = dto.Title,
-                Description = dto.Description,
+                Title = dto.Title.Trim(),
+                Description = dto.Description?.Trim(),
                 Price = dto.Price,
                 OldPrice = dto.OldPrice,
-                Tag = dto.Tag,
+                Tag = dto.Tag?.Trim(),
                 ImageUrl = dto.ImageUrl,
-                Category = dto.Category,
+                Category = dto.Category?.Trim() ?? "other",
                 ReleaseDate = releaseDate.Kind == DateTimeKind.Utc
-    ? releaseDate
-    : releaseDate.ToUniversalTime(),
+                    ? releaseDate
+                    : releaseDate.ToUniversalTime(),
                 AgeRating = dto.AgeRating,
                 IsPreorder = dto.IsPreorder,
-                Developer = dto.Developer,
-                Publisher = dto.Publisher,
-                GameGenres = dto.GenreIds.Select(id => new GameGenre { GenreId = id }).ToList()
+                Developer = dto.Developer?.Trim(),
+                Publisher = dto.Publisher?.Trim(),
+                ExternalUrl = dto.ExternalUrl?.Trim() // ←
             };
+
+     
+            foreach (var genreId in dto.GenreIds.Distinct())
+            {
+                game.GameGenres.Add(new GameGenre { GenreId = genreId });
+            }
+
+  
+            if (dto.Media != null)
+            {
+                foreach (var mediaDto in dto.Media)
+                {
+                    if (string.IsNullOrWhiteSpace(mediaDto.Url)) continue;
+
+                    game.Media.Add(new GameMedia
+                    {
+                        Url = mediaDto.Url.Trim(),
+                        Type = mediaDto.Type?.ToLowerInvariant() == "video" ? "video" : "image"
+                    });
+                }
+            }
 
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
-            return Ok(new { id = game.Id });
+            return CreatedAtAction(nameof(GetGame), new { id = game.Id }, new { id = game.Id });
         }
-
+        [HttpGet("genres")]
+public async Task<IActionResult> GetGenres()
+{
+    var genres = await _context.Genres
+        .Select(g => new { g.Id, g.Name })
+        .ToListAsync();
+    return Ok(genres);
+}
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateGame(int id, [FromBody] CreateGameDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var game = await _context.Games
                 .Include(g => g.GameGenres)
+                .Include(g => g.Media) // ← Обязательно!
                 .FirstOrDefaultAsync(g => g.Id == id);
 
             if (game == null)
                 return NotFound();
 
-            // Валидация даты
-            if (string.IsNullOrWhiteSpace(dto.ReleaseDate) ||
-                !DateTime.TryParse(dto.ReleaseDate, out var releaseDate))
-            {
-                return BadRequest("Неверный формат даты релиза. Используйте YYYY-MM-DD.");
-            }
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                return BadRequest("Title is required.");
+            if (dto.GenreIds == null || !dto.GenreIds.Any())
+                return BadRequest("At least one genre is required.");
+            if (!DateTime.TryParse(dto.ReleaseDate, out var releaseDate))
+                return BadRequest("Invalid date format. Use YYYY-MM-DD.");
 
-            // Валидация жанров
             var existingGenreIds = await _context.Genres
                 .Where(g => dto.GenreIds.Contains(g.Id))
                 .Select(g => g.Id)
                 .ToListAsync();
 
-            if (existingGenreIds.Count != dto.GenreIds.Count)
-                return BadRequest("Один или несколько жанров не найдены.");
+            if (existingGenreIds.Count != dto.GenreIds.Distinct().Count())
+                return BadRequest("One or more genres not found.");
 
-            // Обновление полей
-            game.Title = dto.Title;
-            game.Description = dto.Description;
+            // Обновляем основные поля
+            game.Title = dto.Title.Trim();
+            game.Description = dto.Description?.Trim();
             game.Price = dto.Price;
             game.OldPrice = dto.OldPrice;
-            game.Tag = dto.Tag;
+            game.Tag = dto.Tag?.Trim();
             game.ImageUrl = dto.ImageUrl;
-            game.Category = dto.Category;
-            game.ReleaseDate = releaseDate;
+            game.Category = dto.Category?.Trim() ?? "other";
+            game.ReleaseDate = releaseDate.Kind == DateTimeKind.Utc
+                ? releaseDate
+                : releaseDate.ToUniversalTime();
             game.AgeRating = dto.AgeRating;
             game.IsPreorder = dto.IsPreorder;
-            game.Developer = dto.Developer;
-            game.Publisher = dto.Publisher;
+            game.Developer = dto.Developer?.Trim();
+            game.Publisher = dto.Publisher?.Trim();
+            game.ExternalUrl = dto.ExternalUrl?.Trim(); // ←
 
-            // Обновление жанров
+            // Удаляем старые жанры
             _context.GameGenres.RemoveRange(game.GameGenres);
-            game.GameGenres = dto.GenreIds.Select(gid => new GameGenre { GenreId = gid }).ToList();
+            game.GameGenres.Clear();
+
+            // Добавляем новые жанры
+            foreach (var genreId in dto.GenreIds.Distinct())
+            {
+                game.GameGenres.Add(new GameGenre { GenreId = genreId });
+            }
+
+            // Удаляем старые медиа
+            _context.GameMedias.RemoveRange(game.Media);
+            game.Media.Clear();
+
+            // Добавляем новые медиа
+            if (dto.Media != null)
+            {
+                foreach (var mediaDto in dto.Media)
+                {
+                    if (string.IsNullOrWhiteSpace(mediaDto.Url)) continue;
+
+                    game.Media.Add(new GameMedia
+                    {
+                        Url = mediaDto.Url.Trim(),
+                        Type = mediaDto.Type?.ToLowerInvariant() == "video" ? "video" : "image"
+                    });
+                }
+            }
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -172,7 +241,10 @@ namespace WebApplication1.Controllers.Api.Admin
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
-            var game = await _context.Games.FindAsync(id);
+            var game = await _context.Games
+                .Include(g => g.Media) // ← EF автоматически удалит связанные записи благодаря OnDelete(Cascade)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
             if (game == null)
                 return NotFound();
 
@@ -182,7 +254,7 @@ namespace WebApplication1.Controllers.Api.Admin
         }
     }
 
-    // Например, в папке Dtos/ или прямо в контроллере
+    // DTO для ответа
     public class GameDto
     {
         public int Id { get; set; }
@@ -198,26 +270,41 @@ namespace WebApplication1.Controllers.Api.Admin
         public bool IsPreorder { get; set; }
         public string? Developer { get; set; }
         public string? Publisher { get; set; }
-
-        // Только ID жанров — никаких объектов!
+        public string? ExternalUrl { get; set; } // ←
         public List<int> GenreIds { get; set; } = new();
+        public List<MediaDto> Media { get; set; } = new(); // ←
     }
 
-    // DTO для входящих данных — ReleaseDate как string!
+    public class MediaDto
+    {
+        public int Id { get; set; }
+        public string Url { get; set; } = string.Empty;
+        public string Type { get; set; } = "image";
+    }
+
+   
     public class CreateGameDto
     {
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public decimal Price { get; set; }
-        public decimal? OldPrice { get; set; }          // null разрешён
+        public decimal? OldPrice { get; set; }
         public string? Tag { get; set; }
         public string? ImageUrl { get; set; }
         public string? Category { get; set; }
-        public string? ReleaseDate { get; set; }       // ← строка!
+        public string? ReleaseDate { get; set; } 
         public int AgeRating { get; set; }
         public bool IsPreorder { get; set; }
         public string? Developer { get; set; }
         public string? Publisher { get; set; }
+        public string? ExternalUrl { get; set; }
         public List<int> GenreIds { get; set; } = new();
+        public List<CreateMediaDto> Media { get; set; } = new(); 
+    }
+
+    public class CreateMediaDto
+    {
+        public string Url { get; set; } = string.Empty;
+        public string Type { get; set; } = "image";
     }
 }

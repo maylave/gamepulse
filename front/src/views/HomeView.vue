@@ -52,7 +52,7 @@ const games = ref([])
 onMounted(async () => {
   try {
     const data = await api.games.getAll();
-    games.value = Array.isArray(data.items) ? data.items : []; // предполагаем, что данные в поле items
+    games.value = Array.isArray(data.items) ? data.items : []; 
 
    
   } catch (error) {

@@ -1,71 +1,97 @@
 <template>
   <div class="cart-page">
     <Header />
-    <div class="containerGame">
-      <div class="cart-header">
-        <h1>Ваша корзина</h1>
-        <router-link to="/catalog" class="continue-shopping">
-          Продолжить покупки
-        </router-link>
-      </div>
+    <main class="container">
+      <div class="containerGame">
+        <div class="cart-header">
+          <h1>Ваша корзина</h1>
+          <router-link to="/catalog" class="continue-shopping">
+            Продолжить покупки
+          </router-link>
+        </div>
 
-      <div v-if="cartStore.cartItems.length" class="cart-content">
-        <div class="cart-items">
-          <div v-for="item in cartStore.cartItems" :key="item.id" class="cart-item">
-            <div class="item-image">
-              <img :src="item.image" :alt="item.title" />
+        <div v-if="cartStore.cartItems.length" class="cart-content">
+          <div class="cart-items">
+            <div v-for="item in cartStore.cartItems" :key="item.id" class="cart-item">
+              <div class="item-left">
+                <div class="item-image">
+                  <img :src="item.image" :alt="item.title" />
+                </div>
+                <div class="item-info">
+                  <h3>{{ item.title }}</h3>
+                  <p class="item-genre">{{ item.genre?.join(', ') }}</p>
+                </div>
+              </div>
+
+              <div class="item-right">
+                <div class="item-price">{{ item.price }}₽</div>
+                <div class="item-quantity">
+                  <DragCounter
+                    :model-value="item.quantity"
+                    :min="1"
+                    @update:model-value="
+                      (qty) => cartStore.updateQuantity({ id: item.id, quantity: qty })
+                    "
+                  />
+                </div>
+                <div class="item-total">{{ item.quantity * item.price }}₽</div>
+                <button
+                  class="remove-btn"
+                  @click="cartStore.removeFromCart(item.id)"
+                  title="Удалить"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
             </div>
-            <div class="item-info">
-              <h3>{{ item.title }}</h3>
-              <p class="item-genre">{{ item.genre?.join(', ') }}</p>
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span>Товаров:</span>
+              <strong>{{ cartStore.itemCount }} шт.</strong>
             </div>
-            <div class="item-price">{{ item.price }}₽</div>
-            <div class="item-quantity">
-              <DragCounter
-                :model-value="item.quantity"
-                :min="1"
-                @update:model-value="qty => cartStore.updateQuantity({ id: item.id, quantity: qty })"
-              />
+            <div class="summary-row total">
+              <span>Итого:</span>
+              <strong>{{ cartStore.total }}₽</strong>
             </div>
-            <div class="item-total">{{ item.quantity * item.price }}₽</div>
-            <button class="remove-btn" @click="cartStore.removeFromCart(item.id)" title="Удалить">
-              <i class="fas fa-times"></i>
-            </button>
+            <button class="checkout-btn" @click="handleCheckout">Оформить заказ</button>
           </div>
         </div>
 
-        <div class="cart-summary">
-          <div class="summary-row">
-            <span>Товаров:</span>
-            <strong>{{ cartStore.itemCount }} шт.</strong>
-          </div>
-          <div class="summary-row total">
-            <span>Итого:</span>
-            <strong>{{ cartStore.total }}₽</strong>
-          </div>
-          <button class="checkout-btn" @click="handleCheckout">Оформить заказ</button>
+        <div v-else class="cart-empty">
+          <div class="empty-icon"><i class="fas fa-shopping-cart"></i></div>
+          <p>Ваша корзина пуста</p>
+          <router-link to="/catalog" class="btn-primary empty-btn">Перейти в каталог</router-link>
         </div>
       </div>
 
-      <div v-else class="cart-empty">
-        <div class="empty-icon"><i class="fas fa-shopping-cart"></i></div>
-        <p>Ваша корзина пуста</p>
-        <router-link to="/catalog" class="btn-primary empty-btn">Перейти в каталог</router-link>
+      <!-- История просмотров -->
+      <div v-if="viewHistory.length" class="history-section">
+        <h2>Вы недавно смотрели</h2>
+        <div class="game-grid fixed-cards">
+          <GameCard
+            v-for="game in viewHistory"
+            :key="`history-${game.id}`"
+            :game="game"
+            @add-to-cart="handleAddToCart"
+          />
+        </div>
       </div>
-    </div>
 
-    <div class="game-grid">
-      <GameCard
-        v-for="(game, index) in games"
-        :key="game.id || `game-${index}`"
-        :game="game"
-        class="game"
-        :isAddNew="false"
-        @add-to-cart="handleAddToCart"
-        @game-click="handleGameClick"
-      />
-    </div>
-
+      <!-- Рекомендуемые игры -->
+      <div class="recommended-section">
+        <h2>Вам может понравиться</h2>
+        <div class="game-grid fixed-cards">
+          <GameCard
+            v-for="(game, index) in games"
+            :key="game.id || `game-${index}`"
+            :game="game"
+            @add-to-cart="handleAddToCart"
+          />
+        </div>
+      </div>
+    </main>
     <Footer />
   </div>
 </template>
@@ -74,6 +100,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
+import { useViewHistory } from '@/stores/useViewHistory'
 import { api } from '@/services/api'
 
 import Header from '@/components/Header.vue'
@@ -82,6 +109,7 @@ import GameCard from '@/components/game-card.vue'
 import DragCounter from '@/components/DragCounter.vue'
 
 const cartStore = useCartStore()
+const { history: viewHistory } = useViewHistory()
 const router = useRouter()
 
 const games = ref([])
@@ -110,25 +138,27 @@ const loadGames = async (append = false) => {
 
   isLoading.value = true
 
-  const response = await api.games.getAll({
-   
-    page: page.value,
-    limit: 24
-  })
+  try {
+    const response = await api.games.getAll({
+      page: page.value,
+      pageSize: 12
+    })
 
-  const newGames = response.items || []
+    const newGames = response.items || []
 
-  if (append) {
-    games.value.push(...newGames)
-  } else {
-    games.value = newGames
-    page.value = 1
+    if (append) {
+      games.value.push(...newGames)
+    } else {
+      games.value = newGames
+      page.value = 1
+    }
+
+    hasMore.value = page.value < (response.totalPages || 1)
+    if (hasMore.value) page.value++
+
+  } finally {
+    isLoading.value = false
   }
-
-  hasMore.value = page.value < (response.totalPages || 1)
-  if (hasMore.value) page.value++
-
-  isLoading.value = false
 }
 
 const handleScroll = () => {
@@ -142,19 +172,32 @@ const handleScroll = () => {
   }
 }
 
-const handleAddToCart = (game) => cartStore.addToCart(game)
-const handleGameClick = (game) => console.log('Игра:', game)
+const handleAddToCart = (game) => {
+  cartStore.addToCart(game)
+ 
+ 
+ 
+    cartStore.fetchCart()
+  
+  
+}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .cart-page {
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text);
 }
 
+.container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
 .containerGame {
-  
   padding: 2rem 2.5rem;
 }
 
@@ -163,12 +206,12 @@ const handleGameClick = (game) => console.log('Игра:', game)
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2.5rem;
- 
 }
 
 .cart-header h1 {
   font-size: 2.2rem;
   font-weight: 700;
+  margin: 0;
 }
 
 .continue-shopping {
@@ -176,12 +219,12 @@ const handleGameClick = (game) => console.log('Игра:', game)
   text-decoration: none;
   font-weight: 600;
   transition: opacity 0.2s;
+  white-space: nowrap;
 }
 
 .continue-shopping:hover {
   opacity: 0.8;
 }
-
 
 .cart-content {
   display: grid;
@@ -194,65 +237,100 @@ const handleGameClick = (game) => console.log('Игра:', game)
   padding: 1.5rem;
 }
 
+// === Основной элемент корзины — ПЕРЕДЕЛАНО НА FLEX ===
 .cart-item {
-  display: grid;
-  grid-template-columns: 80px 1fr auto 120px auto 40px;
-  gap: 1rem;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 1rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 1rem;
+
+  .item-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 0; // предотвращает переполнение
+  }
+
+  .item-image img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-genre {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .item-price,
+  .item-total {
+    font-weight: 600;
+    color: var(--color-primary);
+    font-size: 0.95rem;
+  }
+
+  .item-quantity {
+    min-width: 80px;
+    max-width: 80px;
+  }
+
+  .remove-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--color-warning);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .remove-btn:hover {
+    background: #ffcc5c;
+    transform: scale(1.05);
+  }
 }
 
 .cart-item:last-child {
   border-bottom: none;
 }
-
-.item-image img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.item-info h3 {
-  margin: 0 0 0.3rem 0;
-  font-size: 1.1rem;
-}
-
-.item-genre {
-  color: var(--color-text-secondary);
-  font-size: 0.85rem;
-}
-
-.item-price,
-.item-total {
-  font-weight: 600;
-  color: var(--color-primary);
-  text-align: center;
-}
-
-
-
-
-.remove-btn {
-  width: 32px;
-  height: 32px;
-  background: var(--color-warning);
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.remove-btn:hover {
-  background: #ffcc5c;
-  transform: scale(1.05);
-}
-
 
 .cart-summary {
   background: var(--color-card);
@@ -287,13 +365,13 @@ const handleGameClick = (game) => console.log('Игра:', game)
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .checkout-btn:hover {
   opacity: 0.9;
   transform: translateY(-2px);
 }
-
 
 .cart-empty {
   text-align: center;
@@ -330,110 +408,170 @@ const handleGameClick = (game) => console.log('Игра:', game)
   opacity: 0.9;
 }
 
+/* === Адаптивность === */
 
 @media (max-width: 768px) {
-  .cart-item {
-    grid-template-columns: 70px 1fr;
-    grid-template-rows: auto auto;
-    gap: 0.8rem;
-    padding: 1rem 0;
+  .containerGame {
+    padding: 1.5rem 1.5rem;
   }
 
-  .cart-item > *:not(.item-image):not(.item-info) {
-    justify-self: end;
-  }
-
-  .item-info,
-  .item-image {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .item-price,
-  
-  .item-total,
-  .remove-btn {
-    display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-  }
-
-  .cart-summary {
-    padding: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
   .cart-header {
     flex-direction: column;
+    align-items: stretch;
     gap: 1rem;
     text-align: center;
   }
 
-}
-.promo-page {
-  background-color: var(--bg-primary, #0f0f13);
-  color: var(--text-primary, #fff);
-  min-height: 100vh;
-}
-.game{
-    width: 250px;
-}
-.container {
-  max-width: 100%;
-  width: 100%;
-  margin: 40px 40px;
-  padding: 0 20px;
-}
-
-.promo-title {
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 2.5rem 0 2rem;
-  color: var(--text-primary, #fff);
-}
-
-.game-grid {
-  margin-top: 20px;
-  margin-left: 60px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 0.6rem;
-  margin-bottom: 2rem;
-}
-@media (min-width: 1400px) {
-  .game-grid {
-    grid-template-columns: repeat(6, 1fr);
+  .cart-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem 0;
   }
+
+  .item-left {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .item-right {
+    justify-content: flex-end;
+    gap: 0.75rem;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .item-quantity {
+    min-width: 70px;
+    max-width: 70px;
+  }
+
+  .item-price,
+  .item-total {
+    font-size: 0.9rem;
+  }
+
+  .remove-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .checkout-btn {
+    font-size: 1rem;
+    padding: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .containerGame {
+    padding: 1rem;
+  }
+
+  .cart-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .item-image img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .item-info h3 {
+    font-size: 1rem;
+  }
+
+  .item-genre {
+    font-size: 0.8rem;
+  }
+
+  .item-right {
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .item-quantity {
+    min-width: 60px;
+    max-width: 60px;
+  }
+
+  .item-price,
+  .item-total {
+    font-size: 0.85rem;
+  }
+
+  .remove-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .checkout-btn {
+    font-size: 1rem;
+    padding: 0.85rem;
+  }
+}
+
+/* === Карточки (история / рекомендации) === */
+
+.game-grid.fixed-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+  justify-content: center;
+}
+
+.game-grid.fixed-cards .game-card {
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+}
+
+.history-section,
+.recommended-section {
+  padding: 2rem 1rem 1rem;
+}
+
+.history-section h2,
+.recommended-section h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--color-text);
 }
 
 @media (max-width: 768px) {
-  .game-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+  .game-grid.fixed-cards .game-card {
+    width: calc(50% - 0.5rem);
+    min-width: auto;
+    max-width: none;
   }
 }
 
-.loading-indicator,
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-secondary, #aaa);
-}
+@media (max-width: 480px) {
+  .game-grid.fixed-cards {
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+  }
 
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid var(--color-primary, #e53e3e);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-}
+  .game-grid.fixed-cards .game-card {
+    width: 90vw;
+    min-width: auto;
+    max-width: 90vw;
+  }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  .history-section,
+  .recommended-section {
+    padding: 2rem 0.5rem 1.5rem;
+  }
+
+  .history-section h2,
+  .recommended-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.2rem;
+  }
 }
 </style>

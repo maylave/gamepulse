@@ -14,14 +14,16 @@ namespace WebApplication1.Models
         public string? AvatarUrl { get; set; } 
 
 
-        public string? EmailConfirmationCode { get; set; } // Новое поле
+        public string? EmailConfirmationCode { get; set; } 
         public override bool EmailConfirmed { get; set; }
 
-       
-        public ICollection<СartItem> CartItems { get; } = new List<СartItem>();
-        public ICollection<WishlistItem> WishlistItems { get; } = new List<WishlistItem>();
-        public ICollection<Review> Reviews { get; } = new List<Review>();
-        public ICollection<Order> Orders { get; } = new List<Order>();
+        
+        public ICollection<ViewHistory> ViewHistories { get; set; } = new List<ViewHistory>();
+        public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
+        public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
+        public ICollection<СartItem> CartItems { get; set; } = new List<СartItem>();
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
         public ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }

@@ -109,6 +109,7 @@ state.items.reduce(( item) => {
       }
       try {
         await api.cart.add(game.id)
+        this.fetchCart()
       } catch (err) {
         if (existing) {
           existing.quantity -= 1

@@ -3,7 +3,7 @@
     <div class="admin-controls-inner">
       <h2 class="admin-controls-title">Панель управления</h2>
       <nav class="admin-nav">
-        <!-- Полная админка — только для Admin -->
+       
         <router-link 
           v-if="isAdmin" 
           to="/table"
@@ -12,7 +12,7 @@
           Таблица
         </router-link>
 
-        <!-- Поддержка — для Support и Admin -->
+       
         <router-link 
           v-if="canAccessSupport" 
           to="/supportAdmin"
@@ -21,7 +21,7 @@
           Поддержка
         </router-link>
 
-        <!-- Модерация — для Moderator и Admin -->
+        
         <router-link 
           v-if="canAccessModeration" 
           to="/moderation"
@@ -33,7 +33,7 @@
     </div>
   </div>
 
-  <!-- Кнопка "Добавить игру" — для SuperUser и Admin -->
+  
   <div v-if="canAddGames" class="add-game-button-container">
     <router-link to="/add-game" class="add-game-btn">
       + Добавить игру
@@ -55,7 +55,7 @@ const hasAdminAccess = computed(() =>
   authStore.isModerator
 )
 
-// Доступ к конкретным разделам
+  
 const isAdmin = computed(() => authStore.isAdmin)
 const canAccessSupport = computed(() => authStore.isSupport || authStore.isAdmin)
 const canAccessModeration = computed(() => authStore.isModerator || authStore.isAdmin)
@@ -65,7 +65,7 @@ const canAddGames = computed(() => authStore.isSuperUser || authStore.isAdmin)
 <style scoped lang="scss">
 @use '@/assets/style/global/_variables' as *;
 
-/* === Основная панель управления === */
+
 .admin-controls {
   margin: 20px 30px 0 30px;
   padding: 12px 20px;
@@ -117,7 +117,7 @@ const canAddGames = computed(() => authStore.isSuperUser || authStore.isAdmin)
   }
 }
 
-/* === Кнопка "Добавить игру" === */
+
 .add-game-button-container {
   position: fixed;
   bottom: 2rem;
@@ -145,7 +145,7 @@ const canAddGames = computed(() => authStore.isSuperUser || authStore.isAdmin)
   }
 }
 
-/* === Адаптивность === */
+
 @media (max-width: 768px) {
   .admin-controls {
     margin: 16px;
@@ -177,8 +177,8 @@ const canAddGames = computed(() => authStore.isSuperUser || authStore.isAdmin)
     font-size: 0.9rem;
   }
 
-  .add-game-button-container {
-    bottom: 1rem;
+    .add-game-button-container {
+    bottom: calc(1rem + 75px);  
     right: 1rem;
     
     .add-game-btn {
@@ -186,5 +186,8 @@ const canAddGames = computed(() => authStore.isSuperUser || authStore.isAdmin)
       font-size: 0.85em;
     }
   }
+
 }
+
+
 </style>

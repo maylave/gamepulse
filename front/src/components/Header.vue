@@ -25,33 +25,45 @@
       </div>
 
       <div class="desktop-actions">
+      
         <div class="cart-icon" @click="openCart" :class="{ jump: shouldJump }">
           <i class="fas fa-shopping-cart"></i>
           <span v-if="cartStore.itemCount > 0" class="cart-count">{{ cartStore.itemCount }}</span>
         </div>
 
-          <WishlistButton />
+        <WishlistButton />
+
+     
         <div
           v-if="authStore.isAuthenticated"
           ref="desktopMenuRef"
           class="user-avatar-wrapper"
           @click="toggleMenu"
         >
-          <div
-            class="user-avatar desktop"
-            :style="{
-              backgroundImage: `linear-gradient(45deg, ${authStore.userColor || 'var(--color-primary, #e53935)'}, white)`
-            }"
-          >
-            {{ authStore.userInitial || 'U' }}
+        
+          <div class="user-avatar desktop">
+            <img
+              v-if="authStore.user?.avatarUrl && !avatarLoadError"
+              :src="authStore.user.avatarUrl"
+              @error="handleAvatarError"
+              class="avatar-image"
+            />
+            <div
+              v-else
+              class="avatar-gradient"
+              :style="{ backgroundImage: `linear-gradient(45deg, ${authStore.userColor}, white)` }"
+            >
+              {{ authStore.userInitial || 'U' }}
+            </div>
           </div>
+
           <dropdowProfile
             :is-visible="menuVisible"
             @go-to-profile="() => { closeMenu(); router.push('/profile') }"
             @go-to-orders="() => { closeMenu(); router.push('/orders') }"
             @go-to-settings="() => { closeMenu(); router.push('/settings') }"
             @go-to-wishlist="() => { closeMenu(); router.push('/wishlist') }"
-            @logout="() => { authStore.logout(); closeMenu() }"
+            @logout="() => { authStore.logout(); closeMenu(); router.push('/'); }"
           />
         </div>
 
@@ -60,54 +72,60 @@
     </div>
 
     <AdminControls />
-  </header>
 
-  <div v-if="isMobile" class="mobile-nav" :class="{ hidden: isScrolledDown && !isScrollingUp }">
-    <router-link to="/" class="nav-item" :class="{ active: currentRoute === '/' }">
-      <i class="fas fa-home"></i>
-      <span>Главная</span>
-    </router-link>
-    <router-link to="/catalog" class="nav-item" :class="{ active: currentRoute.startsWith('/catalog') }">
-      <i class="fas fa-gamepad"></i>
-      <span>Каталог</span>
-    </router-link>
-    <div class="nav-item cart-center" @click="openCart" :class="{ jump: shouldJump }">
-      <i class="fas fa-shopping-cart"></i>
-      <span>Корзина</span>
-      <span v-if="cartStore.itemCount > 0" class="mobile-cart-count">{{ cartStore.itemCount }}</span>
-    </div>
-
-    <template v-if="authStore.isAuthenticated">
-      <div
-        ref="mobileMenuRef"
-        class="nav-item user-avatar-mobile"
-        @click="toggleMenu"
-      >
-        <div
-          class="user-avatar mobile"
-          :style="{
-            backgroundImage: `linear-gradient(45deg, ${authStore.userColor || '#e53935'}, white)`
-          }"
-        >
-          {{ authStore.userInitial || 'U' }}
-        </div>
-        <dropdowProfile
-          :is-visible="menuVisible"
-          @go-to-profile="() => { closeMenu(); router.push('/profile') }"
-          @go-to-orders="() => { closeMenu(); router.push('/orders') }"
-          @go-to-settings="() => { closeMenu(); router.push('/settings') }"
-          @go-to-wishlist="() => { closeMenu(); router.push('/wishlist') }"
-          @logout="() => { authStore.logout(); closeMenu() }"
-        />
-      </div>
-    </template>
-    <template v-else>
-      <router-link to="/auth" class="nav-item">
-        <i class="fas fa-sign-in-alt"></i>
-        <span>Войти</span>
+   
+    <div v-if="isMobile" class="mobile-nav" :class="{ hidden: isScrolledDown && !isScrollingUp }">
+      <router-link to="/" class="nav-item" :class="{ active: currentRoute === '/' }">
+        <i class="fas fa-home"></i>
+        <span>Главная</span>
       </router-link>
-    </template>
-  </div>
+      <router-link to="/catalog" class="nav-item" :class="{ active: currentRoute.startsWith('/catalog') }">
+        <i class="fas fa-gamepad"></i>
+        <span>Каталог</span>
+      </router-link>
+      <div class="nav-item cart-center" @click="openCart" :class="{ jump: shouldJump }">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Корзина</span>
+        <span v-if="cartStore.itemCount > 0" class="mobile-cart-count">{{ cartStore.itemCount }}</span>
+      </div>
+
+      <template v-if="authStore.isAuthenticated">
+        <div ref="mobileMenuRef" class="nav-item user-avatar-mobile" @click="toggleMenu">
+          <!-- Mobile Avatar -->
+          <div class="user-avatar mobile">
+            <img
+              v-if="authStore.user?.avatarUrl && !avatarLoadError"
+              :src="authStore.user.avatarUrl"
+              @error="handleAvatarError"
+              class="avatar-image"
+            />
+            <div
+              v-else
+              class="avatar-gradient"
+              :style="{ backgroundImage: `linear-gradient(45deg, ${authStore.userColor}, white)` }"
+            >
+              {{ authStore.userInitial || 'U' }}
+            </div>
+          </div>
+
+          <dropdowProfile
+            :is-visible="menuVisible"
+            @go-to-profile="() => { closeMenu(); router.push('/profile') }"
+            @go-to-orders="() => { closeMenu(); router.push('/orders') }"
+            @go-to-settings="() => { closeMenu(); router.push('/settings') }"
+            @go-to-wishlist="() => { closeMenu(); router.push('/wishlist') }"
+            @logout="() => { authStore.logout(); closeMenu(); router.push('/'); }"
+          />
+        </div>
+      </template>
+      <template v-else>
+        <router-link to="/auth" class="nav-item">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Войти</span>
+        </router-link>
+      </template>
+    </div>
+  </header>
 </template>
 
 <script setup>
@@ -118,7 +136,8 @@ import { useCartStore } from '@/stores/cart'
 import AdminControls from './AdminControls.vue'
 import logoGamePlus from '@/assets/logoGamePlus.svg'
 import dropdowProfile from './dropdowProfile.vue'
-import WishlistButton from './WishlistButton.vue';
+import WishlistButton from './WishlistButton.vue'
+
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
@@ -128,13 +147,38 @@ const searchQuery = ref('')
 const menuVisible = ref(false)
 const shouldJump = ref(false)
 const isMobile = ref(window.innerWidth <= 768)
+const avatarLoadError = ref(false)
 
 const currentRoute = computed(() => route.path)
-
 const isScrolledDown = ref(false)
 const isScrollingUp = ref(false)
 let lastScrollY = window.scrollY
 let scrollTimeout = null
+
+
+watch(
+  () => authStore.user?.avatarUrl,
+  () => {
+    avatarLoadError.value = false
+  }
+)
+
+
+function handleAvatarError() {
+  avatarLoadError.value = true
+}
+
+
+watch(
+  () => cartStore.itemCount,
+  (newCount, oldCount) => {
+    if (newCount > oldCount) {
+      shouldJump.value = true
+      setTimeout(() => (shouldJump.value = false), 500)
+    }
+  }
+)
+
 
 const handleScroll = () => {
   const currentScrollY = window.scrollY
@@ -205,20 +249,37 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   if (scrollTimeout) clearTimeout(scrollTimeout)
 })
-
-watch(
-  () => cartStore.itemCount,
-  (newCount, oldCount) => {
-    if (newCount > oldCount) {
-      shouldJump.value = true
-      setTimeout(() => (shouldJump.value = false), 500)
-    }
-  }
-)
 </script>
 
+<style scoped>
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-gradient {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #000;
+  font-size: 1.1rem;
+}
+</style>
+
 <style lang="scss" scoped src="@/assets/style/components/header/main.scss"></style>
-
-
-
-<style ></style>

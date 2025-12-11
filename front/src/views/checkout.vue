@@ -81,7 +81,7 @@
             <strong>₽{{ cartStore.total }}</strong>
           </div>
 
-          <!-- Кнопка оплаты -->
+         
           <button
             class="pay-button"
             @click="submitOrder"
@@ -93,7 +93,7 @@
       </div>
     </main>
 
-    <!-- Модальное окно: добавить карту -->
+ 
     <div v-if="isModalOpen" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
@@ -148,11 +148,13 @@
 </template>
 
 <script setup>
+
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
+import { api } from '@/services/api'
 
 const cartStore = useCartStore()
 const router = useRouter()
@@ -234,21 +236,35 @@ const addNewCard = () => {
   alert('Карта успешно добавлена!')
 }
 
-const submitOrder = () => {
+const submitOrder = async () => {
   if (selectedCardIndex.value === null) {
     alert('Пожалуйста, выберите способ оплаты')
     return
   }
 
+  try {
+    const items = cartStore.cartItems.map(item => ({
+      gameId: item.gameId,
+      quantity: item.quantity,
+      price: item.price 
+    }))
+
+    const result = await api.purchases.bulkPurchase(items)
 
   
-  cartStore.clearCart()
-  router.push('/activation')
+    cartStore.clearCart()
+    router.push('/activation')
+
+    alert(`Заказ оформлен! Итого: ₽${result.totalAmount}`)
+  } catch (error) {
+    console.error('Purchase error:', error)
+    alert('Ошибка при оформлении заказа: ' + (error.message || 'Попробуйте позже'))
+  }
 }
 </script>
 
 <style scoped>
-/* Общие стили */
+
 .checkout-page {
   min-height: 100vh;
   display: flex;

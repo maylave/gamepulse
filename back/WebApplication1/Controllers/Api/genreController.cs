@@ -23,7 +23,7 @@ namespace WebApplication1.Controllers.Api
         public async Task<IActionResult> GetAll()
         {
             var genres = await _context.Genres.ToListAsync();
-            return Ok(genres); // возвращает 200 + JSON-массив жанров
+            return Ok(genres); 
         }
 
         

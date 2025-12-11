@@ -11,8 +11,8 @@ import profileView from '@/views/ProfileView.vue'
 import FavoriteCard from '@/views/FavoriteCard.vue'
 import WishlistPage from '@/views/WishlistPage.vue'
 import ActivationPage from '@/views/ActivationPage.vue'
-
-
+import HistoryView from '@/views/HistoryView.vue'
+import orders from '@/views/OrdersView.vue'
 
 export default [
   { 
@@ -76,6 +76,18 @@ export default [
     component: WishlistPage,
     meta: { requiresLoading: true, loadingMessage: 'Загрузка акций...' }
   },
+  {
+  path: '/history',
+  name: 'History',
+  component: HistoryView,
+   meta: { requiresLoading: true, loadingMessage: 'Загрузка акций...' }
+},
+  {
+  path: '/orders',
+  name: 'orders',
+  component: orders,
+   meta: { requiresLoading: true, loadingMessage: 'Загрузка акций...' }
+},
   {
     path: '/new',
     name: 'new',

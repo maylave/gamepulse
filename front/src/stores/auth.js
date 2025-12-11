@@ -1,6 +1,6 @@
-// src/stores/auth.js
+
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue' 
+import { ref, computed } from 'vue'
 import { api } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -16,14 +16,20 @@ export const useAuthStore = defineStore('auth', () => {
 
   const userColor = computed(() => {
     if (!user.value?.name) return '#2B00FFFF'
-    const firstChar = user.value.name.trim().charAt(0).toUpperCase()
-    const charCode = firstChar.charCodeAt(0)
-    let hue = (charCode % 26) * 10
-    hue = Math.min(hue, 360)
+    const name = user.value.name.trim()
+    if (!name) return '#2B00FFFF'
+
+
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    }
+
+    const hue = Math.abs(hash) % 360
     return `hsl(${hue}, 80%, 45%)`
   })
 
-  // === РОЛЕВЫЕ ПРОВЕРКИ ===
+
 
   const isAdmin = computed(() => user.value?.roles?.includes('Admin'))
   const isSuperUser = computed(() => user.value?.roles?.includes('SuperUser'))
@@ -31,13 +37,13 @@ export const useAuthStore = defineStore('auth', () => {
   const isModerator = computed(() => user.value?.roles?.includes('Moderator'))
   const isUser = computed(() => user.value?.roles?.includes('User'))
 
-  // Комплексные проверки (как в auth.js из services)
+
   const canAccessAdminPanel = computed(() => isAdmin.value)
   const canAddGames = computed(() => isSuperUser.value || isAdmin.value)
   const canAccessSupport = computed(() => isSupport.value || isAdmin.value)
   const canAccessModeration = computed(() => isModerator.value || isAdmin.value)
 
-  // === АУТЕНТИФИКАЦИЯ ===
+
 
   const login = async (credentials) => {
     try {
@@ -48,12 +54,13 @@ export const useAuthStore = defineStore('auth', () => {
         id: data.id,
         name: data.name,
         email: data.email,
-        roles: Array.isArray(data.roles) ? data.roles : [data.roles] // Защита на случай строки
+        avatarUrl: data.avatarUrl || null,
+        roles: Array.isArray(data.roles) ? data.roles : [data.roles]
       }
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('user', JSON.stringify(userData))
       isAuthenticated.value = true
-      user.value = userData 
+      user.value = userData
       return data
     } catch (err) {
       error.value = err.message || 'Ошибка входа'
@@ -110,17 +117,38 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated.value = false
     user.value = null
   }
-
+  const updateUser = (updatedFields) => {
+    if (!user.value) return
+    user.value = { ...user.value, ...updatedFields }
+    localStorage.setItem('user', JSON.stringify(user.value))
+  }
   const getToken = () => localStorage.getItem('authToken')
+  const getAvatar = async () => {
+    try {
+      const profile = await api.profile.get()
+      localAvatarUrl.value = profile.avatarUrl || DEFAULT_AVATAR
+      localName.value = profile.name
+      email.value = profile.email
 
+
+      authStore.updateUser({
+        name: profile.name,
+        email: profile.email,
+        avatarUrl: profile.avatarUrl || null
+      })
+    } catch (error) {
+      console.error('Ошибка загрузки профиля:', error)
+
+    }
+  }
   return {
-    // Состояния
+
     isAuthenticated,
     user,
     loading,
     error,
 
-    // Вычисляемые свойства — роли
+
     isAdmin,
     isSuperUser,
     isSupport,
@@ -132,13 +160,15 @@ export const useAuthStore = defineStore('auth', () => {
     canAccessModeration,
     userInitial,
     userColor,
+    updateUser,
 
-    // Методы
+
     login,
     register,
     confirmEmail,
     resendConfirmation,
     logout,
+    getAvatar,
     getToken
   }
 })

@@ -18,20 +18,22 @@ namespace WebApplication1.Controllers.Api
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly ILogger<UsersController> _logger;
-
+        private readonly IWebHostEnvironment _environment;
         public UsersController(
             UserManager<User> userManager,
             IConfiguration configuration,
             IEmailService emailService,
-            ILogger<UsersController> logger)
+            ILogger<UsersController> logger,
+            IWebHostEnvironment environment)
         {
             _userManager = userManager;
             _configuration = configuration;
             _emailService = emailService;
             _logger = logger;
+              _environment = environment;
         }
 
-        // === РЕГИСТРАЦИЯ ===
+        
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] CreateUserDto dto)
         {
@@ -50,7 +52,7 @@ namespace WebApplication1.Controllers.Api
                 UserName = dto.Email,
                 Email = dto.Email,
                 Name = dto.Name,
-                EmailConfirmed = false // важно: не подтверждён
+                EmailConfirmed = false
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -60,20 +62,20 @@ namespace WebApplication1.Controllers.Api
                 return BadRequest(string.Join("; ", errors));
             }
 
-            // Генерация 6-значного кода
+
             var code = new Random().Next(100000, 999999).ToString();
             user.EmailConfirmationCode = code;
 
             try
             {
-                // Отправка email
+                
                 await _emailService.SendEmailAsync(
                     dto.Email,
                     "Подтверждение email — GamePulse",
                     code
                 );
 
-                // Сохраняем код в БД
+
                 var updateResult = await _userManager.UpdateAsync(user);
                 if (!updateResult.Succeeded)
                 {
@@ -97,8 +99,8 @@ namespace WebApplication1.Controllers.Api
                 needsEmailConfirmation = true
             });
         }
+        
 
-        // === ВХОД ===
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
@@ -158,59 +160,59 @@ namespace WebApplication1.Controllers.Api
             });
         }
 
-       [HttpPost("confirm-email")]
-public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
-{
-    _logger.LogInformation("Начало подтверждения email: {Email}, код: {Code}", dto.Email, dto.Code);
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
+        {
+            _logger.LogInformation("Начало подтверждения email: {Email}, код: {Code}", dto.Email, dto.Code);
 
-    if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Code))
-    {
-        _logger.LogWarning("Пустой email или код");
-        return BadRequest("Email и код обязательны.");
-    }
+            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Code))
+            {
+                _logger.LogWarning("Пустой email или код");
+                return BadRequest("Email и код обязательны.");
+            }
 
-    var user = await _userManager.FindByEmailAsync(dto.Email);
-    if (user == null)
-    {
-        _logger.LogWarning("Пользователь не найден: {Email}", dto.Email);
-        return BadRequest("Пользователь не найден.");
-    }
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("Пользователь не найден: {Email}", dto.Email);
+                return BadRequest("Пользователь не найден.");
+            }
 
-    _logger.LogInformation("Найден пользователь: Id={Id}, EmailConfirmed={Confirmed}, Code={Code}", 
-        user.Id, user.EmailConfirmed, user.EmailConfirmationCode);
+            _logger.LogInformation("Найден пользователь: Id={Id}, EmailConfirmed={Confirmed}, Code={Code}",
+                user.Id, user.EmailConfirmed, user.EmailConfirmationCode);
 
-    if (user.EmailConfirmed)
-    {
-        _logger.LogWarning("Email уже подтверждён: {Email}", dto.Email);
-        return BadRequest("Email уже подтверждён.");
-    }
+            if (user.EmailConfirmed)
+            {
+                _logger.LogWarning("Email уже подтверждён: {Email}", dto.Email);
+                return BadRequest("Email уже подтверждён.");
+            }
 
-    if (user.EmailConfirmationCode != dto.Code)
-    {
-        _logger.LogWarning("Неверный код: ожидался {Expected}, получен {Actual}", 
-            user.EmailConfirmationCode, dto.Code);
-        return BadRequest("Неверный код подтверждения.");
-    }
+            if (user.EmailConfirmationCode != dto.Code)
+            {
+                _logger.LogWarning("Неверный код: ожидался {Expected}, получен {Actual}",
+                    user.EmailConfirmationCode, dto.Code);
+                return BadRequest("Неверный код подтверждения.");
+            }
 
-    user.EmailConfirmed = true;
-    user.EmailConfirmationCode = null;
+            user.EmailConfirmed = true;
+            user.EmailConfirmationCode = null;
 
-    var updateResult = await _userManager.UpdateAsync(user);
-    if (!updateResult.Succeeded)
-    {
-        _logger.LogError("Ошибка обновления пользователя: {Errors}", 
-            string.Join(", ", updateResult.Errors));
-        return StatusCode(500, "Не удалось подтвердить email.");
-    }
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                _logger.LogError("Ошибка обновления пользователя: {Errors}",
+                    string.Join(", ", updateResult.Errors));
+                return StatusCode(500, "Не удалось подтвердить email.");
+            }
 
-    _logger.LogInformation("Email успешно подтверждён: {Email}", dto.Email);
+            _logger.LogInformation("Email успешно подтверждён: {Email}", dto.Email);
 
-    if (!await _userManager.IsInRoleAsync(user, "User"))
-        await _userManager.AddToRoleAsync(user, "User");
+            if (!await _userManager.IsInRoleAsync(user, "User"))
+                await _userManager.AddToRoleAsync(user, "User");
 
-    return Ok(new { message = "Email успешно подтверждён!" });
-}
-        // === ПОВТОРНАЯ ОТПРАВКА КОДА ===
+            return Ok(new { message = "Email успешно подтверждён!" });
+        }
+
         [HttpPost("resend-confirmation")]
         public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationDto dto)
         {
@@ -224,7 +226,7 @@ public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
             if (user.EmailConfirmed)
                 return BadRequest("Email уже подтверждён.");
 
-            // Генерация НОВОГО кода
+          
             var newCode = new Random().Next(100000, 999999).ToString();
             user.EmailConfirmationCode = newCode;
 
@@ -249,18 +251,15 @@ public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
             }
         }
 
-        // DTO для повторной отправки
 
-        // === ПРОФИЛЬ: GET ===
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
         {
-            if (!TryGetUserId(out int userId))
-                return BadRequest("Требуется X-User-Id в заголовке (демо)");
+          var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized();
 
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user == null) return NotFound();
-
+          
             var roles = await _userManager.GetRolesAsync(user);
 
             return Ok(new
@@ -273,7 +272,7 @@ public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
             });
         }
 
-        // === ПРОФИЛЬ: PATCH ===
+
         [HttpPatch("profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
         {
@@ -302,7 +301,7 @@ public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
             });
         }
 
-        // === НАЗНАЧЕНИЕ АДМИНА ===
+
         [HttpPost("make-admin")]
         public async Task<IActionResult> MakeAdmin([FromBody] MakeAdminDto dto)
         {
@@ -316,7 +315,7 @@ public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
             return Ok("Пользователь стал админом");
         }
 
-        // === ПРОВЕРКА РОЛИ ===
+
         [HttpGet("check-role")]
         public async Task<IActionResult> CheckRole()
         {
@@ -335,7 +334,39 @@ public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
             });
         }
 
-        // === ВСПОМОГАТЕЛЬНЫЙ МЕТОД ===
+        [HttpPost("profile/avatar")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+        {
+            if (!TryGetUserId(out int userId))
+                return BadRequest("Требуется X-User-Id в заголовке (демо)");
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) return NotFound();
+
+            if (avatar == null || avatar.Length == 0)
+                return BadRequest("Файл не выбран.");
+
+            if (!avatar.ContentType.StartsWith("image/"))
+                return BadRequest("Разрешены только изображения.");
+
+          
+            var fileName = $"{userId}_{Guid.NewGuid()}{Path.GetExtension(avatar.FileName)}";
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "avatars");
+            Directory.CreateDirectory(uploadsFolder);
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await avatar.CopyToAsync(stream);
+            }
+
+            // Сохраняем относительный URL
+            user.AvatarUrl = $"/uploads/avatars/{fileName}";
+            await _userManager.UpdateAsync(user);
+
+            return Ok(new { avatarUrl = user.AvatarUrl });
+        }
         private bool TryGetUserId(out int userId)
         {
             userId = 0;
@@ -345,40 +376,40 @@ public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
             return true;
         }
         // === DTO ===
-public class LoginDto
-{
-    public string Email { get; set; } = "";
-    public string Password { get; set; } = "";
-}
+        public class LoginDto
+        {
+            public string Email { get; set; } = "";
+            public string Password { get; set; } = "";
+        }
 
-public class CreateUserDto
-{
-    public string Name { get; set; } = "";
-    public string Email { get; set; } = "";
-    public string Password { get; set; } = "";
-}
+        public class CreateUserDto
+        {
+            public string Name { get; set; } = "";
+            public string Email { get; set; } = "";
+            public string Password { get; set; } = "";
+        }
 
-public class UpdateProfileDto
-{
-    public string Name { get; set; } = "";
-    public string AvatarUrl { get; set; } = "";
-}
+        public class UpdateProfileDto
+        {
+            public string Name { get; set; } = "";
+            public string AvatarUrl { get; set; } = "";
+        }
 
-public class MakeAdminDto
-{
-    public string Email { get; set; } = string.Empty;
-}
+        public class MakeAdminDto
+        {
+            public string Email { get; set; } = string.Empty;
+        }
 
-public class ConfirmEmailDto
-{
-    public string Email { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-}
+        public class ConfirmEmailDto
+        {
+            public string Email { get; set; } = string.Empty;
+            public string Code { get; set; } = string.Empty;
+        }
 
-// ➕ ДОБАВЬ ЭТОТ DTO В КОНЕЦ СЕКЦИИ
-public class ResendConfirmationDto
-{
-    public string Email { get; set; } = string.Empty;
-}
+        // ➕ ДОБАВЬ ЭТОТ DTO В КОНЕЦ СЕКЦИИ
+        public class ResendConfirmationDto
+        {
+            public string Email { get; set; } = string.Empty;
+        }
     }
 }

@@ -1,7 +1,46 @@
-<!-- src/views/Profile/components/ProfileForm.vue -->
 <template>
   <div class="tab-content">
     <h2 class="section-title">Профиль</h2>
+
+    <!-- Аватар -->
+    <div class="avatar-section">
+      <div class="avatar-preview">
+        <img
+          :src="previewAvatarUrl"
+          :alt="localName || 'Аватар'"
+          @error="handleAvatarError"
+        />
+      </div>
+      <div class="avatar-controls">
+        <input
+          v-model="localAvatarUrl"
+          type="url"
+          class="form-control avatar-input"
+          placeholder="https://example.com/avatar.jpg"
+          :disabled="loading"
+        />
+        <!-- КНОПКА ЗАГРУЗКИ ФАЙЛА -->
+        <label class="btn btn-secondary avatar-upload">
+          Загрузить
+          <input
+            type="file"
+            accept="image/*"
+            @change="handleFileUpload"
+            class="visually-hidden"
+          />
+        </label>
+        <button
+          type="button"
+          class="btn btn-secondary avatar-reset"
+          @click="resetAvatar"
+          :disabled="loading"
+        >
+          Сбросить
+        </button>
+      </div>
+    </div>
+
+    <!-- Остальное содержимое профиля -->
     <div class="profile-info">
       <div class="name-field">
         <label>Полное имя</label>
@@ -73,39 +112,100 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { api } from '@/services/api' // ✅ ЕДИНЫЙ API-КЛИЕНТ
+import { api } from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
 
-const props = defineProps({
-  initialProfile: {
-    type: Object,
-    required: true,
-    validator: (val) => 'name' in val && 'email' in val
-  }
-})
+const DEFAULT_AVATAR = '/images/defaults/avatar.png'
 
-const emit = defineEmits(['update'])
+// Глобальное хранилище (для обновления токена/ролей, если нужно)
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const isEditing = ref(false)
 const newPassword = ref('')
-const originalName = ref(props.initialProfile.name)
-const localName = ref(props.initialProfile.name)
-const email = ref(props.initialProfile.email)
+const localName = ref('')
+const email = ref('')
+const localAvatarUrl = ref(DEFAULT_AVATAR)
+
+const previewAvatarUrl = computed(() => {
+  return localAvatarUrl.value || DEFAULT_AVATAR
+})
 
 const isNameValid = computed(() => localName.value.trim().length >= 2)
+
+// 🔑 ОСНОВНОЙ МЕТОД: получение профиля с сервера
+const getProfile = async () => {
+  try {
+    const profile = await api.profile.get()
+    localName.value = profile.name
+    email.value = profile.email
+    localAvatarUrl.value = profile.avatarUrl || DEFAULT_AVATAR
+
+    // Опционально: обновить глобальное состояние (например, роли)
+    authStore.updateUser({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      avatarUrl: profile.avatarUrl || null,
+      roles: profile.roles
+    })
+  } catch (error) {
+    console.error('Ошибка загрузки профиля:', error)
+    alert('Не удалось загрузить данные профиля.')
+  }
+}
 
 const toggleEdit = () => {
   if (isEditing.value) {
     saveProfile()
   } else {
-    originalName.value = localName.value
     isEditing.value = true
   }
 }
 
 const cancelEdit = () => {
-  localName.value = originalName.value
+  getProfile() // возвращаемся к серверным данным
   isEditing.value = false
+}
+
+const resetAvatar = () => {
+  localAvatarUrl.value = DEFAULT_AVATAR
+}
+
+const handleAvatarError = () => {
+  localAvatarUrl.value = DEFAULT_AVATAR
+}
+
+const handleFileUpload = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    alert('Пожалуйста, выберите изображение (JPEG, PNG и т.д.)')
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Файл слишком большой. Максимум — 5 МБ.')
+    return
+  }
+
+  loading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    await api.profile.uploadAvatar(formData)
+
+    // 🔁 Загружаем актуальные данные с сервера
+    await getProfile()
+  } catch (error) {
+    console.error('Ошибка загрузки аватара:', error)
+    alert('Не удалось загрузить аватар. Попробуйте позже.')
+  } finally {
+    loading.value = false
+    event.target.value = ''
+  }
 }
 
 const saveProfile = async () => {
@@ -116,28 +216,102 @@ const saveProfile = async () => {
 
   loading.value = true
   try {
-    
-    const updatedUser = await api.profile.update({
-      name: localName.value,
-      password: newPassword.value || undefined
-    })
+    const payload = {
+      name: localName.value.trim(),
+      password: newPassword.value || undefined,
+      avatarUrl: localAvatarUrl.value === DEFAULT_AVATAR ? null : localAvatarUrl.value
+    }
 
-    emit('update', updatedUser.name)
-    newPassword.value = ''
-    isEditing.value = false
-    alert(` Профиль обновлён!\nПривет, ${updatedUser.name}!`)
+    await api.profile.update(payload)
+
+    // 🔁 Загружаем актуальные данные с сервера
+    await getProfile()
+
+    alert(`Профиль обновлён!\nПривет, ${localName.value}!`)
   } catch (error) {
     console.error('Ошибка сохранения профиля:', error)
     alert('Не удалось сохранить изменения. Проверьте соединение.')
   } finally {
     loading.value = false
+    isEditing.value = false
   }
 }
 
+// Загружаем профиль при монтировании
 onMounted(() => {
-  localName.value = props.initialProfile.name
-  email.value = props.initialProfile.email
+  getProfile()
 })
 </script>
 
+<style scoped lang="scss">
+@use '@/assets/style/global/_variables' as *;
+
+/* Только минимальные стили для нового элемента — без цветов и переписывания твоих */
+.avatar-upload {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+</style>
+
 <style scoped lang="scss" src="@/assets/style/views/profile/main.scss"></style>
+
+<style scoped lang="scss">
+@use '@/assets/style/global/_variables' as *;
+
+.avatar-section {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: flex-start;
+}
+
+.avatar-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid $color-border;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.avatar-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .avatar-input {
+    flex: 1;
+  }
+
+  .avatar-reset {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .avatar-section {
+    flex-direction: column;
+  }
+}
+</style>

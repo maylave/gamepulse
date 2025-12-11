@@ -1,29 +1,21 @@
-<!-- src/views/GameView.vue -->
 <template>
   <div class="app">
     <Header />
     <main class="container">
-      <!-- Загрузка -->
       <div v-if="gameStore.loading" class="loading">
-        <LoadingSpinner></LoadingSpinner>
+       
       </div>
 
-      <!-- Ошибка: игра не найдена -->
       <div v-else-if="gameStore.error" class="error-section">
         <div class="error-content">
           <h2>Игра не найдена</h2>
           <p>К сожалению, игра с ID "{{ route.params.id }}" не существует.</p>
           <div class="error-actions">
-            <button class="btn btn-primary" @click="goBack">
-              Вернуться назад
-            </button>
-            <router-link to="/catalog" class="btn btn-secondary">
-              В каталог
-            </router-link>
+            <button class="btn btn-primary" @click="goBack">Вернуться назад</button>
+            <router-link to="/catalog" class="btn btn-secondary">В каталог</router-link>
           </div>
         </div>
       </div>
-
 
       <div v-else-if="game" class="game-page">
         <button class="back-btn" @click="goBack" aria-label="Вернуться назад">
@@ -34,29 +26,27 @@
         </button>
 
         <div class="breadcrumbs">
-          <router-link to="/">Главная</router-link> / 
-          <router-link to="/catalog">Каталог</router-link> / 
+          <router-link to="/">Главная</router-link> /
+          <router-link to="/catalog">Каталог</router-link> /
           <span>{{ game.title }}</span>
         </div>
 
         <div class="game-layout">
           <GameMedia :game="game" />
-          <GameInfo 
+          <GameInfo
             :game="game"
-            :is-in-wishlist="false"
+            :is-in-wishlist="isInWishlist"
             @action="handleAction"
             @wishlist="handleWishlist"
           />
-        
         </div>
 
         <section class="description">
           <h2>Описание</h2>
           <div v-html="game.description"></div>
         </section>
-           <GameReviews  :game="game"
-           ></GameReviews>
-       
+
+        <GameReviews :game="game" />
       </div>
     </main>
     <Footer />
@@ -67,19 +57,33 @@
 import { onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
+import { useWishlistStore } from '@/stores/wishlistStore' // ← добавлен импорт
+
 import Header from '@/components/Header.vue'
 import Footer from '@/components/footer.vue'
 import GameMedia from '@/components/game/GameMedia.vue'
 import GameInfo from '@/components/game/GameInfo.vue'
-import GameReviews from '../components/game/GameReviews.vue'
+import GameReviews from '@/components/game/GameReviews.vue'
+
+
 const route = useRoute()
 const router = useRouter()
 const gameStore = useGameStore()
+const wishlistStore = useWishlistStore() // ← инициализация
+
 const game = computed(() => gameStore.game)
 
+
+const isInWishlist = computed(() => {
+  return wishlistStore.isGameInWishlist(game.value?.id)
+})
+
 onMounted(() => {
+  wishlistStore.hydrateFromLocalStorage()
   const id = Number(route.params.id)
-  gameStore.fetchGame(id)
+  if (!isNaN(id)) {
+    gameStore.fetchGame(id)
+  }
 })
 
 const goBack = () => {
@@ -89,6 +93,7 @@ const goBack = () => {
     router.push('/catalog')
   }
 }
+
 watch(
   () => route.params.id,
   async (newId) => {
@@ -98,24 +103,26 @@ watch(
       return
     }
 
-    
     gameStore.error = null
     await gameStore.fetchGame(id)
-
-   
   },
-  { immediate: true } 
+  { immediate: true }
 )
+
 const handleAction = () => {
   alert(`Действие с "${game.value.title}"`)
 }
-const handleWishlist = () => {
-  alert('Добавлено в избранное')
+
+const handleWishlist = async () => {
+  if (game.value) {
+    await wishlistStore.toggleWishlist(game.value)
+  }
 }
 </script>
 
 <style scoped lang="scss">
 @use '@/assets/style/global/_variables' as *;
+
 .app {
   min-height: 100vh;
   background: $color-bg;
@@ -129,8 +136,7 @@ const handleWishlist = () => {
   padding: 2rem 0;
 }
 
-
-// Ошибка
+/* Остальные стили остаются без изменений */
 .error-section {
   display: flex;
   justify-content: center;
@@ -166,7 +172,6 @@ const handleWishlist = () => {
   flex-wrap: wrap;
 }
 
-// Кнопки ошибки
 .btn {
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
@@ -198,7 +203,6 @@ const handleWishlist = () => {
   }
 }
 
-// Успешная страница — остальное без изменений
 .back-btn {
   display: flex;
   align-items: center;
@@ -231,7 +235,9 @@ const handleWishlist = () => {
   a {
     color: $color-primary;
     text-decoration: none;
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
 
@@ -256,7 +262,11 @@ const handleWishlist = () => {
 }
 
 @media (max-width: 992px) {
-  .game-layout { grid-template-columns: 1fr; }
-  .error-actions { flex-direction: column; }
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+  .error-actions {
+    flex-direction: column;
+  }
 }
 </style>

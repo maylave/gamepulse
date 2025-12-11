@@ -41,7 +41,7 @@
             :game="item"
             :isPlaceholder="!!item.isPlaceholder"
             :isAddNew="!!item.isAddNew"
-            @loadMore="loadMoreGames"
+            @loadMore="$emit('see-more')" 
             @add-to-cart="$emit('add-to-cart', $event)"
             @createNewGame="openCreateGameModal"
             class="game"
@@ -67,7 +67,7 @@ const props = defineProps({
   showAddNew: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['add-to-cart', 'game-click'])
+const emit = defineEmits(['add-to-cart', 'game-click','see-more'])
 
 const carouselRef = ref(null)
 const currentSlide = ref(0)
@@ -124,14 +124,12 @@ const goNext = () => {
   }
 }
 
-// Заглушка — если вызывается из GameCard
 const loadMoreGames = () => {
-  // Можно оставить пустой или эмитить 'see-more'
+ 
 }
 
 const openCreateGameModal = () => {
-  // Например: emit('open-create-modal') или router push
-  // Пока оставим как заглушку — ты можешь расширить по нужде
+ 
 }
 </script>
 

@@ -12,11 +12,11 @@ namespace WebApplication1.Controllers.Api.Admin
     public class UsersController : ControllerBase 
     {
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole<int>> _roleManager; // ← ИСПРАВЛЕНО
+        private readonly RoleManager<IdentityRole<int>> _roleManager; 
 
         public UsersController(
             UserManager<User> userManager,
-            RoleManager<IdentityRole<int>> roleManager) // ← ИСПРАВЛЕНО
+            RoleManager<IdentityRole<int>> roleManager) 
         {
             _userManager = userManager;
             _roleManager = roleManager;
