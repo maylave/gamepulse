@@ -136,11 +136,7 @@ const handleAddToCart = (game) => {
   min-height: 100vh;
 }
 
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.5rem 3rem;
-}
+
 
 .loading-section,
 .empty-home {
