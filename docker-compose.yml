@@ -4,16 +4,14 @@ services:
   postgres:
     image: postgres:18
     restart: always
-    ports:
-      - "5432:5432"
     environment:
-      POSTGRES_USER: root1
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: GameStoreDb
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root1 -d GameStoreDb"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,14 +20,9 @@ services:
     build: ./back
     environment:
       - ASPNETCORE_URLS=http://+:5000
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=GameStoreDb;Username=root1;Password=root
-      # Proxy для поддомена api.game-pulse.ru
-      - VIRTUAL_HOST=api.game-pulse.ru
-      - VIRTUAL_PORT=5000
-      - LETSENCRYPT_HOST=api.game-pulse.ru
-      - LETSENCRYPT_EMAIL=artem@example.com  # ⚠️ замени на свою почту!
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
     volumes:
-      - uploads_data:/app/wwwroot/uploads
+       - uploads_data:/app/wwwroot/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,35 +31,20 @@ services:
 
   frontend:
     build: ./front
-    environment:
-      - VIRTUAL_HOST=game-pulse.ru,www.game-pulse.ru
-      - LETSENCRYPT_HOST=game-pulse.ru,www.game-pulse.ru
-      - LETSENCRYPT_EMAIL=sofc114@yandex.ru  
     expose:
       - "80"
 
-  nginx-proxy:
-    image: nginxproxy/nginx-proxy
-    container_name: nginx-proxy
+  nginx:
+    image: nginx:alpine
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs:ro
-      - ./vhost.d:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
-    restart: always
-
-  letsencrypt:
-    image: nginxproxy/acme-companion
-    container_name: nginx-proxy-letsencrypt
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/nginx/certs:rw
-      - ./acme:/etc/acme.sh
-    environment:
-      - DEFAULT_EMAIL=sofc114@yandex.ru 
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - webapp
+      - frontend
     restart: always
 
 volumes:
