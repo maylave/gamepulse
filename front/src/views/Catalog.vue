@@ -5,7 +5,7 @@
     <main class="container containerCatalog">
       <h1 class="page-title">Каталог игр</h1>
 
-      <!-- Поиск и кнопка фильтров -->
+     
       <div class="search-filters-bar">
         <div class="search-wrapper">
           <div class="search-box">
@@ -24,10 +24,10 @@
         </button>
       </div>
 
-      <!-- Фильтры -->
+      
       <div v-show="showFilters" class="filters-content">
         <div class="filter-row">
-          <!-- Жанры с ограничением и "Показать ещё" -->
+         
           <div class="filter-group" v-if="genres.length">
             <h4><i class="fas fa-gamepad"></i> Жанры</h4>
             <div class="genres-list">
@@ -54,7 +54,7 @@
             </button>
           </div>
 
-          <!-- Цена -->
+          
           <div class="filter-group">
             <h4><i class="fas fa-tag"></i> Цена</h4>
             <div class="price-range">
@@ -76,7 +76,7 @@
             </div>
           </div>
 
-          <!-- Возраст -->
+         
           <div class="filter-group">
             <h4><i class="fas fa-birthday-cake"></i> Возраст</h4>
             <div class="age-range">
@@ -100,7 +100,7 @@
             </div>
           </div>
 
-          <!-- Скидки -->
+       
           <div class="filter-group">
             <label class="checkbox-label">
               <input
@@ -118,7 +118,7 @@
         </button>
       </div>
 
-      <!-- Результаты -->
+     
       <div class="results-info" v-if="!loading && games.length">
         Найдено: {{ total }} игр
       </div>
@@ -136,7 +136,7 @@
         />
       </div>
 
-      <!-- Пагинация -->
+    
       <div v-if="totalPages > 1" class="pagination">
         <button :disabled="page === 1" @click="changePage(page - 1)">Назад</button>
         <span>Стр. {{ page }} из {{ totalPages }}</span>
@@ -152,7 +152,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
+import Footer from '@/components/footer.vue'
 import GameCard from '@/components/game-card.vue'
 import { useCartStore } from '@/stores/cart'
 import { api } from '@/services/api'

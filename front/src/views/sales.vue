@@ -52,11 +52,11 @@ const loadGames = async (append = false) => {
   isLoading.value = true
 
   try {
-    // Запрашиваем ТОЛЬКО игры со скидкой (onSale: true)
+   
     const response = await api.games.getAll({
-      onSale: true,      // ← ключевой параметр
+      onSale: true,     
       page: page.value,
-      pageSize: 24       // ← важно: не 'limit', а 'pageSize' (см. твою api-функцию)
+      pageSize: 24     
     })
 
     const newGames = Array.isArray(response.items) ? response.items : []
