@@ -3,7 +3,7 @@
     <Header />
     
     <main class="container">
-     
+      <h1 class="promo-title">Акции</h1>
 
       <div class="game-grid">
         <GameCard
@@ -15,9 +15,6 @@
           @add-to-cart="handleAddToCart"
           @game-click="handleGameClick"
         />
-
-        
-       
       </div>
 
       <div v-if="isLoading && hasMore" class="loading-indicator">
@@ -25,7 +22,7 @@
       </div>
 
       <div v-else-if="games.length === 0 && !isLoading" class="empty-state">
-        Пока нет бесплатных игр. Создайте первую!
+        Сейчас нет игр со скидками. Следите за обновлениями!
       </div>
     </main>
 
@@ -55,10 +52,11 @@ const loadGames = async (append = false) => {
   isLoading.value = true
 
   try {
+    // Запрашиваем ТОЛЬКО игры со скидкой (onSale: true)
     const response = await api.games.getAll({
-      category: 'free',
+      onSale: true,      // ← ключевой параметр
       page: page.value,
-      limit: 24
+      pageSize: 24       // ← важно: не 'limit', а 'pageSize' (см. твою api-функцию)
     })
 
     const newGames = Array.isArray(response.items) ? response.items : []
@@ -77,7 +75,7 @@ const loadGames = async (append = false) => {
       page.value += 1
     }
   } catch (error) {
-    console.error('Ошибка загрузки бесплатных игр:', error)
+    console.error('Ошибка загрузки акций:', error)
     hasMore.value = false
   } finally {
     isLoading.value = false
@@ -111,12 +109,7 @@ const handleAddToCart = (game) => {
 const handleGameClick = (game) => {
   console.log('Клик по игре:', game)
 }
-
-const openCreateGameModal = () => {
-  console.log('Открыть создание игры')
-}
 </script>
-
 
 <style scoped>
 .promo-page {
@@ -124,10 +117,8 @@ const openCreateGameModal = () => {
   color: var(--text-primary, #fff);
   min-height: 100vh;
 }
-.game{
-    width: 250px;
-}
-.container{
+
+.container {
   padding-top: 2rem;
 }
 
@@ -144,6 +135,7 @@ const openCreateGameModal = () => {
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
+
 @media (min-width: 1400px) {
   .game-grid {
     grid-template-columns: repeat(6, 1fr);

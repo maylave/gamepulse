@@ -32,7 +32,7 @@ namespace WebApplication1.Controllers.Api.Admin
             public bool IsPreorder { get; set; }
             public string? Developer { get; set; }
             public string? Publisher { get; set; }
-            public string? ExternalUrl { get; set; } // ← Новое поле
+            public string? ExternalUrl { get; set; } 
 
             public List<int> GenreIds { get; set; } = new();
             public List<CreateMediaDto> Media { get; set; } = new();

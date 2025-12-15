@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Каталог — GamePulse</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --color-primary: #00F0FF;
+      --color-secondary: #6A00FF;
+      --color-bg: #0D0D12;
+      --color-card: #16161D;
+      --color-header: #111118;
+      --color-text: #E6E6F0;
+      --color-text-secondary: #A0A0B5;
+      --color-success: #00D98D;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Шапка */
+    header {
+      background-color: var(--color-header);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .search-box {
+      position: relative;
+      width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.5rem;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 30px;
+      color: white;
+      font-size: 0.95rem;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #777;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .icon-btn:hover {
+      background: var(--color-primary);
+      color: #000;
+    }
+
+    /* Основной контент */
+    .main-content {
+      display: flex;
+      gap: 2rem;
+      padding: 2rem 0;
+    }
+
+    /* Фильтры */
+    .filters {
+      width: 250px;
+      background: var(--color-card);
+      border-radius: 16px;
+      padding: 1.5rem;
+      height: fit-content;
+      position: sticky;
+      top: 90px;
+    }
+
+    .filter-group {
+      margin-bottom: 1.8rem;
+    }
+
+    .filter-title {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      cursor: pointer;
+    }
+
+    .checkbox-item input {
+      margin-right: 0.8rem;
+      accent-color: var(--color-primary);
+    }
+
+    .price-range {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .price-inputs {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .price-inputs input {
+      width: 100%;
+      padding: 0.5rem;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: white;
+    }
+
+    /* Список игр */
+    .games-content {
+      flex: 1;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.8rem;
+    }
+
+    .sort-select {
+      background: var(--color-card);
+      color: white;
+      padding: 0.6rem 1rem;
+      border: 1px solid #333;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 2rem;
+    }
+
+    .game-card {
+      background: var(--color-card);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+    }
+
+    .game-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px rgba(0, 240, 255, 0.2);
+    }
+
+    .game-card.promo::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+      padding: 2px;
+      background: linear-gradient(45deg, var(--color-primary), var(--color-secondary), var(--color-primary));
+      background-size: 300% 300%;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      z-index: 1;
+      animation: rotateGradient 3s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rotateGradient {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    .game-img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+    }
+
+    .tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: var(--color-success);
+      color: #000;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      z-index: 2;
+    }
+
+    .game-info {
+      padding: 1.2rem;
+    }
+
+    .game-info h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .price-old {
+      text-decoration: line-through;
+      color: #777;
+      font-size: 0.9rem;
+    }
+
+    .price {
+      color: var(--color-primary);
+      font-weight: bold;
+      font-size: 1.3rem;
+      margin: 0.4rem 0;
+    }
+
+    .add-to-cart {
+      width: 100%;
+      padding: 0.6rem;
+      background: #2a2a32;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .add-to-cart:hover {
+      background: #353540;
+    }
+
+    /* Пагинация */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 2.5rem;
+    }
+
+    .page-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-card);
+      border: 1px solid #333;
+      color: var(--color-text);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .page-btn.active {
+      background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+      color: #000;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 992px) {
+      .main-content {
+        flex-direction: column;
+      }
+      .filters {
+        position: static;
+        width: 100%;
+      }
+      .search-box {
+        width: 200px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .search-box {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container header-content">
+      <div class="logo">GamePulse</div>
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Поиск игр...">
+      </div>
+      <div class="icon-btn">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="main-content">
+      <!-- Фильтры -->
+      <aside class="filters">
+        <div class="filter-group">
+          <div class="filter-title">Жанры</div>
+          <label class="checkbox-item"><input type="checkbox"> Экшен</label>
+          <label class="checkbox-item"><input type="checkbox"> RPG</label>
+          <label class="checkbox-item"><input type="checkbox"> Стратегии</label>
+          <label class="checkbox-item"><input type="checkbox"> Гонки</label>
+          <label class="checkbox-item"><input type="checkbox"> Спорт</label>
+          <label class="checkbox-item"><input type="checkbox"> Хоррор</label>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-title">Цена</div>
+          <div class="price-range">
+            <div class="price-inputs">
+              <input type="number" placeholder="От" min="0">
+              <input type="number" placeholder="До" min="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-title">Специальные</div>
+          <label class="checkbox-item"><input type="checkbox"> Со скидкой</label>
+          <label class="checkbox-item"><input type="checkbox"> Бесплатные</label>
+          <label class="checkbox-item"><input type="checkbox"> Скоро выйдут</label>
+        </div>
+      </aside>
+
+      <!-- Игры -->
+      <main class="games-content">
+        <div class="controls">
+          <div>Найдено: <strong>128 игр</strong></div>
+          <select class="sort-select">
+            <option>Сначала популярные</option>
+            <option>Сначала дешёвые</option>
+            <option>Сначала дорогие</option>
+            <option>Новинки</option>
+          </select>
+        </div>
+
+        <div class="games-grid">
+          <div class="game-card promo">
+            <span class="tag">-60%</span>
+            <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Cyberpunk 2077" class="game-img">
+            <div class="game-info">
+              <h3>Cyberpunk 2077</h3>
+              <div class="price-old">3 249 ₽</div>
+              <div class="price">1 299 ₽</div>
+              <button class="add-to-cart">В корзину</button>
+            </div>
+          </div>
+          <div class="game-card">
+            <img src="https://images.unsplash.com/photo-1511512578717-92578b575e9d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Elden Ring" class="game-img">
+            <div class="game-info">
+              <h3>Elden Ring</h3>
+              <div class="price">2 499 ₽</div>
+              <button class="add-to-cart">В корзину</button>
+            </div>
+          </div>
+          <div class="game-card promo">
+            <span class="tag">Новинка</span>
+            <img src="https://images.unsplash.com/photo-1599644377489-4f0f1c8d5c8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Starfield" class="game-img">
+            <div class="game-info">
+              <h3>Starfield</h3>
+              <div class="price">3 199 ₽</div>
+              <button class="add-to-cart">В корзину</button>
+            </div>
+          </div>
+          <div class="game-card">
+            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Hogwarts Legacy" class="game-img">
+            <div class="game-info">
+              <h3>Hogwarts Legacy</h3>
+              <div class="price">1 899 ₽</div>
+              <button class="add-to-cart">В корзину</button>
+            </div>
+          </div>
+          <div class="game-card">
+            <span class="tag" style="background:var(--color-success)">Бесплатно</span>
+            <img src="https://images.unsplash.com/photo-1551390137-3a823d99c719?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Fortnite" class="game-img">
+            <div class="game-info">
+              <h3>Fortnite</h3>
+              <div class="price">0 ₽</div>
+              <button class="add-to-cart">Играть</button>
+            </div>
+          </div>
+          <div class="game-card promo">
+            <span class="tag">25 окт.</span>
+            <img src="https://images.unsplash.com/photo-1612237333177-9e1a5e92c5eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="GTA VI" class="game-img">
+            <div class="game-info">
+              <h3>GTA VI</h3>
+              <div class="price">4 499 ₽</div>
+              <button class="add-to-cart">Предзаказ</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pagination">
+          <div class="page-btn active">1</div>
+          <div class="page-btn">2</div>
+          <div class="page-btn">3</div>
+          <div class="page-btn">→</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.add-to-cart').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const gameName = this.closest('.game-info').querySelector('h3').textContent;
+        alert(`✅ "${gameName}" добавлена в корзину!`);
+      });
+    });
+
+    // Простая имитация фильтрации (можно расширить)
+    document.querySelectorAll('.checkbox-item input').forEach(cb => {
+      cb.addEventListener('change', () => {
+        console.log('Фильтр изменён:', cb.parentElement.textContent.trim());
+        // Здесь будет запрос к API
+      });
+    });
+  </script>
+</body>
+</html>

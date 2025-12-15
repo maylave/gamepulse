@@ -47,7 +47,7 @@ namespace WebApplication1
                         entity.Property(g => g.Description).HasMaxLength(5000);
                         entity.Property(g => g.Price).HasColumnType("decimal(18,2)").IsRequired();
                         entity.Property(g => g.Developer).HasMaxLength(200);
-                        entity.Property(g => g.ExternalUrl).HasMaxLength(500); // ← Ссылка на сайт/приложение
+                        entity.Property(g => g.ExternalUrl).HasMaxLength(500);
                   });
 
                   // === CartItem ===

@@ -2,7 +2,7 @@
 
 import { useAuthStore } from '@/stores/auth'
 
-// === Конфигурация ===
+
 const API_CONFIG = {
   primary: '/api',
   //backup: '/api',
@@ -12,7 +12,7 @@ const API_CONFIG = {
 const DEMO_CART = [{ id: 1, gameId: 1, quantity: 1 }]
 const DEMO_WISHLIST = [{ id: 1, gameId: 2 }]
 
-// Для демо-режима (если используется)
+
 const DEMO_GAMES = [
   {
     id: 1,
@@ -86,7 +86,7 @@ const request = async (endpoint, options = {}) => {
   throw new Error('Данные недоступны')
 }
 
-// === НОВАЯ ФУНКЦИЯ: загрузка аватарки (отдельно от request) ===
+
 const uploadAvatarRequest = async (formData) => {
   const token = localStorage.getItem('authToken')
   const userStr = localStorage.getItem('user')
@@ -102,7 +102,7 @@ const uploadAvatarRequest = async (formData) => {
     headers['X-User-Id'] = userId.toString()
   }
 
-  // НЕ устанавливаем Content-Type — браузер сам проставит multipart/form-data
+
 
   try {
     const res = await fetchWithTimeout(url, {
@@ -149,7 +149,7 @@ export const api = {
       const {
         search,
         category,
-        genreIds,        // массив ID жанров
+        genreIds,        
         minPrice,
         maxPrice,
         minAge,
@@ -162,17 +162,17 @@ export const api = {
 
       const queryParams = new URLSearchParams()
 
-      // Поиск
+     
       if (search) {
         queryParams.append('search', search)
       }
 
-      // Категория
+      
       if (category && category !== 'all') {
         queryParams.append('category', category)
       }
 
-      // Жанры (массив)
+      
       if (Array.isArray(genreIds) && genreIds.length > 0) {
         genreIds.forEach(id => {
           queryParams.append('genreIds', id.toString())

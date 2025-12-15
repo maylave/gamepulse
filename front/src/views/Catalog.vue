@@ -5,15 +5,15 @@
     <main class="container containerCatalog">
       <h1 class="page-title">Каталог игр</h1>
 
-      <!-- Поиск + Фильтры -->
+      <!-- Поиск и кнопка фильтров -->
       <div class="search-filters-bar">
         <div class="search-wrapper">
           <div class="search-box">
             <i class="fas fa-search"></i>
-            <input 
-              v-model="localQuery" 
-              type="text" 
-              placeholder="Поиск по названию..." 
+            <input
+              v-model="localQuery"
+              type="text"
+              placeholder="Поиск по названию..."
               @input="debouncedSearch"
             />
           </div>
@@ -24,22 +24,37 @@
         </button>
       </div>
 
-      <!-- Фильтры (свёрнуты по умолчанию) -->
+      <!-- Фильтры -->
       <div v-show="showFilters" class="filters-content">
         <div class="filter-row">
+          <!-- Жанры с ограничением и "Показать ещё" -->
           <div class="filter-group" v-if="genres.length">
             <h4><i class="fas fa-gamepad"></i> Жанры</h4>
-            <label v-for="genre in genres" :key="genre.id" class="checkbox-label">
-              <input
-                type="checkbox"
-                :value="genre.id"
-                v-model="selectedGenreIds"
-                @change="applyFilters"
-              />
-              {{ genre.name }}
-            </label>
+            <div class="genres-list">
+              <label
+                v-for="genre in displayedGenres"
+                :key="genre.id"
+                class="checkbox-label"
+              >
+                <input
+                  type="checkbox"
+                  :value="genre.id"
+                  v-model="selectedGenreIds"
+                  @change="applyFilters"
+                />
+                {{ genre.name }}
+              </label>
+            </div>
+            <button
+              v-if="genres.length > visibleGenresLimit"
+              @click="toggleShowAllGenres"
+              class="show-more-genres"
+            >
+              {{ showAllGenres ? 'Скрыть' : 'Показать ещё' }} ({{ genres.length }})
+            </button>
           </div>
 
+          <!-- Цена -->
           <div class="filter-group">
             <h4><i class="fas fa-tag"></i> Цена</h4>
             <div class="price-range">
@@ -61,6 +76,7 @@
             </div>
           </div>
 
+          <!-- Возраст -->
           <div class="filter-group">
             <h4><i class="fas fa-birthday-cake"></i> Возраст</h4>
             <div class="age-range">
@@ -84,6 +100,7 @@
             </div>
           </div>
 
+          <!-- Скидки -->
           <div class="filter-group">
             <label class="checkbox-label">
               <input
@@ -96,10 +113,12 @@
           </div>
         </div>
 
-        <button @click="resetFilters" class="reset-btn"><i class="fas fa-undo"></i> Сбросить</button>
+        <button @click="resetFilters" class="reset-btn">
+          <i class="fas fa-undo"></i> Сбросить
+        </button>
       </div>
 
-      <!-- Информация -->
+      <!-- Результаты -->
       <div class="results-info" v-if="!loading && games.length">
         Найдено: {{ total }} игр
       </div>
@@ -107,7 +126,7 @@
         Ничего не найдено 😕
       </div>
 
-      <!-- Игры -->
+      <!-- Сетка игр -->
       <div class="games-grid">
         <GameCard
           v-for="game in games"
@@ -130,10 +149,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/footer.vue'
+import Footer from '@/components/Footer.vue'
 import GameCard from '@/components/game-card.vue'
 import { useCartStore } from '@/stores/cart'
 import { api } from '@/services/api'
@@ -142,16 +161,16 @@ const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
 
-// Аккордеон
+// UI
 const showFilters = ref(false)
 
 // Данные
 const games = ref([])
 const total = ref(0)
 const loading = ref(false)
-const error = ref(null)
 const totalPages = ref(1)
 const page = ref(1)
+const genres = ref([])
 
 // Фильтры
 const localQuery = ref('')
@@ -161,12 +180,25 @@ const maxPrice = ref(null)
 const minAge = ref(null)
 const maxAge = ref(null)
 const onSaleOnly = ref(false)
-const localSortBy = ref('id')
-const genres = ref([])
 
-// Функции
+// Жанры: компактный список
+const visibleGenresLimit = ref(6)
+const showAllGenres = ref(false)
+
+const displayedGenres = computed(() => {
+  if (showAllGenres.value || genres.value.length <= visibleGenresLimit.value) {
+    return genres.value
+  }
+  return genres.value.slice(0, visibleGenresLimit.value)
+})
+
+// Методы
 function toggleFilters() {
   showFilters.value = !showFilters.value
+}
+
+function toggleShowAllGenres() {
+  showAllGenres.value = !showAllGenres.value
 }
 
 async function loadGenres() {
@@ -189,15 +221,15 @@ function debouncedSearch() {
 
 async function fetchGames() {
   loading.value = true
-  error.value = null
 
   try {
     const { q, category, sort, page: urlPage, genres: genreParam, minPrice: minP, maxPrice: maxP, minAge: minA, maxAge: maxA, onSale } = route.query
 
     localQuery.value = q || ''
-    localSortBy.value = sort || 'id'
     page.value = Number(urlPage) || 1
-    selectedGenreIds.value = genreParam ? (Array.isArray(genreParam) ? genreParam.map(Number) : [Number(genreParam)]) : []
+    selectedGenreIds.value = genreParam
+      ? (Array.isArray(genreParam) ? genreParam.map(Number) : [Number(genreParam)])
+      : []
     minPrice.value = minP ? Number(minP) : null
     maxPrice.value = maxP ? Number(maxP) : null
     minAge.value = minA ? Number(minA) : null
@@ -226,9 +258,8 @@ async function fetchGames() {
     games.value = Array.isArray(response.items) ? response.items.filter(g => g && g.id) : []
     total.value = response.total || 0
     totalPages.value = response.totalPages || 1
-
   } catch (err) {
-    error.value = err.message || 'Ошибка загрузки'
+    console.error('Ошибка загрузки игр:', err)
     games.value = []
   } finally {
     loading.value = false
@@ -238,7 +269,6 @@ async function fetchGames() {
 function applyFilters() {
   const query = {}
   if (localQuery.value.trim()) query.q = localQuery.value.trim()
-  if (localSortBy.value !== 'id') query.sort = localSortBy.value
   if (selectedGenreIds.value.length) query.genres = selectedGenreIds.value
   if (minPrice.value !== null) query.minPrice = minPrice.value
   if (maxPrice.value !== null) query.maxPrice = maxPrice.value
@@ -246,6 +276,7 @@ function applyFilters() {
   if (maxAge.value !== null) query.maxAge = maxAge.value
   if (onSaleOnly.value) query.onSale = 'true'
   if (page.value > 1) query.page = page.value
+
   router.push({ query })
 }
 
@@ -257,7 +288,6 @@ function resetFilters() {
   minAge.value = null
   maxAge.value = null
   onSaleOnly.value = false
-  localSortBy.value = 'id'
   page.value = 1
   router.push({ path: '/catalog' })
 }
@@ -316,12 +346,12 @@ watch(() => route.query, () => {
 .search-box input {
   width: 100%;
   padding: 0.7rem 1rem 0.7rem 2.2rem;
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
+  background: var(--color-input-bg, #222);
+  border: 1px solid var(--color-border, #333);
   border-radius: 8px;
-  color: var(--color-text);
+  color: var(--color-text, #fff);
   font-size: 1rem;
-  font-family: var(--font-main);
+  font-family: var(--font-main, 'Inter', sans-serif);
 }
 
 .search-box i {
@@ -329,12 +359,12 @@ watch(() => route.query, () => {
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #aaa);
 }
 
 .filters-toggle {
   padding: 0.6rem 1rem;
-  background: var(--color-primary);
+  background: var(--color-primary, #e53e3e);
   color: white;
   border: none;
   border-radius: 8px;
@@ -346,7 +376,7 @@ watch(() => route.query, () => {
 }
 
 .filters-content {
-  background: var(--color-card);
+  background: var(--color-card, #16161D);
   padding: 1.2rem;
   border-radius: 12px;
   margin-bottom: 1.5rem;
@@ -362,20 +392,47 @@ watch(() => route.query, () => {
 .filter-group h4 {
   margin-bottom: 0.6rem;
   font-size: 1rem;
-  color: var(--color-text);
+  color: var(--color-text, #fff);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* ЖАНРЫ — КОМПАКТНО */
+.genres-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0.4rem 0;
+  gap: 0.4rem;
   cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  color: var(--color-text, #e6e6f0);
 }
 
+.show-more-genres {
+  background: transparent;
+  color: var(--color-primary, #e53e3e);
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  margin-top: 0.4rem;
+  display: inline-block;
+}
+
+.show-more-genres:hover {
+  opacity: 0.8;
+}
+
+/* Остальные фильтры */
 .price-range,
 .age-range {
   display: flex;
@@ -387,10 +444,10 @@ watch(() => route.query, () => {
 .age-range input {
   width: 70px;
   padding: 0.35rem;
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
+  background: var(--color-input-bg, #222);
+  border: 1px solid var(--color-border, #333);
   border-radius: 6px;
-  color: var(--color-text);
+  color: var(--color-text, #fff);
   font-size: 0.95rem;
 }
 
@@ -413,7 +470,7 @@ watch(() => route.query, () => {
 .empty-state {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #aaa);
 }
 
 .games-grid {
@@ -421,7 +478,7 @@ watch(() => route.query, () => {
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 1.8rem;
   margin-bottom: 2rem;
-  justify-content: center; 
+  justify-content: center;
 }
 
 .pagination {
@@ -433,7 +490,7 @@ watch(() => route.query, () => {
 
 .pagination button {
   padding: 0.4rem 0.8rem;
-  background: var(--color-primary);
+  background: var(--color-primary, #e53e3e);
   color: white;
   border: none;
   border-radius: 6px;
@@ -444,6 +501,7 @@ watch(() => route.query, () => {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 
 @media (max-width: 768px) {
   .search-filters-bar {

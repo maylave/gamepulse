@@ -41,3 +41,19 @@ a {
     border-radius: 2px;
   }
 }
+
+@media (hover: none), (pointer: coarse) {
+  .game-card:hover,
+  .button:hover,
+  .nav-item:hover,
+  .wishlist-btn:hover,
+  .add-to-cart:hover,
+  [class*="hover"]:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: inherit !important;
+    color: inherit !important;
+    border-color: inherit !important;
+    opacity: 1 !important;
+  }
+}

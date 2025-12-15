@@ -79,3 +79,6 @@ Logs
 *.log
 
 
+
+nginx-proxy.conf
+docker-compose.yml

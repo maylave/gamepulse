@@ -55,11 +55,12 @@ const loadGames = async (append = false) => {
   isLoading.value = true
 
   try {
-    const response = await api.games.getAll({
-      category: 'top',
-      page: page.value,
-      limit: 24
-    })
+   const response = await api.games.getAll({
+  sortBy: 'releaseDate',
+  ascending: false,
+  page: page.value,
+  pageSize: 24
+})
 
     const newGames = Array.isArray(response.items) ? response.items : []
 
@@ -143,7 +144,7 @@ const openCreateGameModal = () => {
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 @media (min-width: 1400px) {

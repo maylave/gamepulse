@@ -18,22 +18,23 @@
       </div>
     </div>
     
-    <UButton >Перейти к акциям</UButton>
+    <UButton @click="openSales">Перейти к акциям</UButton>
   
   </section>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 const countdown = ref({
   days: '00',
   hours: '00',
   minutes: '00'
 })
-
+const router = useRouter()
 const updateCountdown = () => {
   const now = new Date()
-  const target = new Date('2025-12-15T12:00:00')
+  const target = new Date('2025-12-17T12:00:00')
   const diff = target - now
 
   if (diff > 0) {
@@ -48,7 +49,10 @@ const updateCountdown = () => {
     }
   }
 }
-
+const openSales = () => {
+ 
+  router.push('/sales')
+}
 onMounted(() => {
   updateCountdown()
   setInterval(updateCountdown, 60000)

@@ -102,7 +102,7 @@ const isOnLastSlide = computed(() => {
 const canGoPrev = computed(() => currentSlide.value > 0)
 const canGoNext = computed(() => totalSlides.value > 0 && currentSlide.value < totalSlides.value - 1)
 
-// События карусели
+
 const onSlideChange = (index) => {
   currentSlide.value = index
 }
@@ -111,7 +111,6 @@ const onGameClick = (game) => {
   emit('game-click', game)
 }
 
-// Управление вручную через кнопки (если UniversalCarousel поддерживает .prev() / .next())
 const goPrev = () => {
   if (canGoPrev.value && carouselRef.value?.prev) {
     carouselRef.value.prev()
@@ -181,7 +180,7 @@ const openCreateGameModal = () => {
   cursor: not-allowed;
 }
 
-/* Мобильная версия — скрываем стрелки */
+
 @media (max-width: 768px) {
   .games-carousel__nav-controls {
     display: none;
@@ -212,5 +211,6 @@ const openCreateGameModal = () => {
 
 :deep(.carousel-track) {
   gap: 1.5rem;
+  overflow: visible !important; 
 }
 </style>
